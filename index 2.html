@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="nl-BE">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maurushoeve | Beheer</title>
+<style>
+:root{--aub:#401216;--wine:#663137;--cream:#efe5d3;--sand:#d7c4b7;--bg:#f8f7f6;--ink:#292527;--line:#e6e0de}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Montserrat,Arial,sans-serif}button,input{font:inherit}button{cursor:pointer;border:0;border-radius:9px;padding:12px 17px;font-weight:700}button.primary{background:var(--aub);color:#fff}button.secondary{background:#f0e8e5;color:var(--aub)}button:disabled{opacity:.5;cursor:not-allowed}header{background:var(--aub);color:#fff;padding:21px max(24px,calc((100vw - 1100px)/2));display:flex;align-items:center;justify-content:space-between;gap:10px}.brand{font-size:21px;letter-spacing:.1em;font-weight:800}.brand small{display:block;font-size:11px;letter-spacing:.12em;color:var(--sand);font-weight:500}main{max-width:1100px;margin:34px auto;padding:0 22px}.panel{background:white;border:1px solid var(--line);border-radius:15px;box-shadow:0 7px 25px rgba(64,18,22,.04);padding:28px;margin-bottom:22px}h1{font-size:25px;color:var(--aub);margin:0 0 8px}h2{font-size:18px;color:var(--aub);margin:0 0 12px}p{margin:8px 0 18px}.muted{color:#776b6e}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(225px,1fr));gap:14px}.tile{border:1px solid var(--line);padding:20px;border-radius:12px;background:#fff}.tile h3{font-size:14px;color:var(--wine);margin:5px 0 8px}.tile .count{font-size:29px;font-weight:800;color:var(--aub)}.tile small{color:#796c71}.tag{font-size:11px;color:var(--wine);background:#f5eeec;padding:3px 8px;border-radius:99px}.field{margin:0 0 15px}label{display:block;font-weight:700;font-size:13px;margin-bottom:6px}input{width:100%;padding:11px 12px;border-radius:8px;border:1px solid #d8ced0;max-width:550px}input:focus{outline:2px solid #ae888c;outline-offset:1px}.actions{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.notice{border-left:4px solid var(--wine);background:#f7f1f0;padding:13px 16px;border-radius:6px;margin:16px 0}.error{border-color:#af382a;background:#fff0ef}.success{border-color:#388051;background:#edf7f0}.hidden{display:none!important}.small{font-size:12px}.top-actions{display:flex;align-items:center;gap:12px}.top-actions button{background:#fff;color:var(--aub);padding:7px 12px}footer{max-width:1100px;margin:22px auto 50px;padding:0 22px;color:#81777a;font-size:12px}a{color:var(--wine)}@media(max-width:600px){header{padding:17px 18px}.brand{font-size:17px}.panel{padding:20px}main{padding:0 15px;margin:20px auto}}
+</style>
+</head>
+<body>
+<header><div class="brand">MAURUSHOEVE <small>CENTRAAL BEHEER · EVENTS & PERSONEEL</small></div><div class="top-actions"><span id="who" class="small"></span><button id="logout" class="hidden" type="button">Afmelden</button></div></header>
+<main>
+<section id="config" class="panel"><h1>Verbind met Supabase</h1><p class="muted">Eenmalige instelling op dit toestel. Hier komen uitsluitend het projectadres en de publieke (publishable) sleutel. Gebruik nooit een secret- of service_role-sleutel.</p><div class="field"><label for="url">Supabase Project URL</label><input id="url" placeholder="https://jouwproject.supabase.co" autocomplete="off" spellcheck="false"></div><div class="field"><label for="key">Publishable key (begint met sb_publishable_)</label><input id="key" placeholder="sb_publishable_..." autocomplete="off" spellcheck="false"></div><div class="actions"><button class="primary" id="saveConfig" type="button">Verbinding instellen</button><span class="small muted">Project Settings → Data API en API Keys</span></div></section>
+<section id="auth" class="panel hidden"><h1>Aanmelden</h1><p class="muted">Log in met je bestaande Supabase Authentication-account. Het wachtwoord wordt niet in de browserinstellingen opgeslagen.</p><form id="loginForm"><div class="field"><label for="email">E-mailadres</label><input id="email" type="email" required autocomplete="username" placeholder="jij@maurushoeve.be"></div><div class="field"><label for="password">Wachtwoord</label><input id="password" type="password" required autocomplete="current-password"></div><div class="actions"><button class="primary" type="submit">Aanmelden</button><button class="secondary" id="recover" type="button">Wachtwoord herstellen</button><button class="secondary" id="editConfig" type="button">Verbindingsinstellingen</button></div></form></section>
+<section id="recovery" class="panel hidden"><h1>Nieuw wachtwoord instellen</h1><p>Je hebt een herstel-link geopend. Kies hieronder een nieuw wachtwoord.</p><form id="recoveryForm"><div class="field"><label for="newPassword">Nieuw wachtwoord (minstens 12 tekens)</label><input id="newPassword" type="password" minlength="12" required autocomplete="new-password"></div><div class="field"><label for="confirmPassword">Herhaal het nieuwe wachtwoord</label><input id="confirmPassword" type="password" minlength="12" required autocomplete="new-password"></div><div class="actions"><button class="primary" type="submit">Wachtwoord opslaan</button></div></form></section>
+<section id="dashboard" class="hidden"><div class="panel"><h1>Welkom bij Maurushoeve Beheer</h1><p class="muted">De online basis van ons centrale beheersysteem. Alleen de verbinding en het overzicht zijn in deze eerste versie actief; de bewerkbare personeelsplanning wordt hierna aangesloten.</p><div class="actions"><button class="primary" id="refresh" type="button">Gegevens controleren</button><button class="secondary" id="change" type="button">Verbindingsinstellingen</button></div></div><div class="grid" style="margin-bottom:22px"><div class="tile"><h3>Feesten</h3><div class="count" id="countEvents">—</div><small>mh_events</small></div><div class="tile"><h3>Medewerkers</h3><div class="count" id="countEmployees">—</div><small>mh_employees</small></div><div class="tile"><h3>Shiften</h3><div class="count" id="countShifts">—</div><small>mh_shifts</small></div></div><h2>Onderdelen van het programma</h2><div class="grid" id="modules"></div></section>
+<div id="status" role="status" aria-live="polite" class="notice hidden"></div>
+</main>
+<footer>Voorlopige online startpagina · Geen persoonsgegevens of lonen opgenomen in deze GitHub-pagina · Gegevens blijven in Supabase.</footer>
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const $=id=>document.getElementById(id);let client=null;let recovering=false;let recoveringLink=location.hash.includes('type=recovery')||location.search.includes('type=recovery');
+const modules=['Personeelsplanning','Weekoverzichten','Feesten & projecten','Kijkdagfiches','Voorbereidingsfiches','Afwerkingsfiches','Medewerkersbeheer','Facturen & kosten','Financiële resultaten'];
+$('modules').innerHTML=modules.map(x=>`<div class="tile"><h3>${x}</h3><span class="tag">Binnenkort</span></div>`).join('');
+function show(...names){['config','auth','recovery','dashboard'].forEach(n=>$(n).classList.toggle('hidden',!names.includes(n)))}
+function status(msg,type=''){const el=$('status');el.textContent=msg;el.className='notice '+type;el.classList.remove('hidden')}
+function clearStatus(){$('status').classList.add('hidden')}
+function connect(url,key){
+  const u=new URL(url);
+  if(u.protocol!=='https:'||!u.hostname.endsWith('.supabase.co'))throw Error('Vul een geldig https://…supabase.co projectadres in.');
+  if(!key.startsWith('sb_publishable_'))throw Error('Gebruik uitsluitend de publishable key die met sb_publishable_ begint.');
+  client=createClient(u.origin,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'implicit'}});
+  client.auth.onAuthStateChange((event,session)=>{
+    if(event==='PASSWORD_RECOVERY'){
+      recovering=true;
+      show('recovery');
+      status('Herstellink bevestigd. Kies nu je nieuwe wachtwoord.','success');
+    }else if(event==='SIGNED_OUT'){
+      recovering=false;recoveringLink=false;
+      $('who').textContent='';$('logout').classList.add('hidden');show('auth');
+    }else if(event==='SIGNED_IN'&&!recovering&&!recoveringLink){
+      setTimeout(()=>renderSession(session),0);
+    }
+  });
+  return client;
+}
+async function renderSession(session){if(!session?.user){show('auth');return}show('dashboard');$('who').textContent=session.user.email||'';$('logout').classList.remove('hidden');await loadCounts()}
+async function loadCounts(){if(!client)return;clearStatus();const names=[['mh_events','countEvents'],['mh_employees','countEmployees'],['mh_shifts','countShifts']];try{for(const [table,id] of names){const {count,error}=await client.from(table).select('id',{count:'exact',head:true});if(error)throw error;$(id).textContent=count??'0'}status('Verbinding werkt: aantallen zijn rechtstreeks uit Supabase opgehaald.','success')}catch(e){status('Ingelogd, maar gegevens ophalen lukte niet: '+e.message,'error')}}
+$('saveConfig').onclick=async()=>{try{const url=$('url').value.trim(),key=$('key').value.trim();connect(url,key);localStorage.setItem('mh_project_url',url);localStorage.setItem('mh_publishable_key',key);clearStatus();const {data,error}=await client.auth.getSession();if(error)throw error;if(!recovering&&!recoveringLink)await renderSession(data.session)}catch(e){status(e.message,'error')}};
+$('loginForm').onsubmit=async e=>{e.preventDefault();if(!client)return;clearStatus();const email=$('email').value.trim(),password=$('password').value;$('password').value='';const {error}=await client.auth.signInWithPassword({email,password});if(error)status('Aanmelden mislukt: '+error.message,'error')};
+$('recover').onclick=async()=>{if(!client)return;const email=$('email').value.trim();if(!email){status('Vul eerst je e-mailadres in.','error');return}const redirectTo=location.origin+location.pathname;const {error}=await client.auth.resetPasswordForEmail(email,{redirectTo});status(error?'Herstelmail niet verzonden: '+error.message:'Als dit account bestaat, is een herstelmail aangevraagd. Controleer je inbox. Stel eerst in Supabase Authentication → URL Configuration deze website als Site URL in.',error?'error':'success')};
+$('recoveryForm').onsubmit=async e=>{e.preventDefault();const password=$('newPassword').value;const confirm=$('confirmPassword').value;if(password!==confirm){status('De twee wachtwoorden zijn niet gelijk.','error');return}const {error}=await client.auth.updateUser({password});$('newPassword').value='';$('confirmPassword').value='';if(error){status('Wachtwoord wijzigen mislukt: '+error.message,'error');return}recovering=false;recoveringLink=false;history.replaceState(null,'',location.pathname);const {data}=await client.auth.getSession();await renderSession(data.session);status('Wachtwoord gewijzigd en aangemeld.','success')};
+$('logout').onclick=async()=>{if(client)await client.auth.signOut()};$('refresh').onclick=loadCounts;
+function editConfig(){show('config');clearStatus()}$('editConfig').onclick=editConfig;$('change').onclick=editConfig;
+$('url').value=localStorage.getItem('mh_project_url')||'';$('key').value=localStorage.getItem('mh_publishable_key')||'';
+if($('url').value&&$('key').value){try{connect($('url').value,$('key').value);client.auth.getSession().then(({data,error})=>{if(error)status(error.message,'error');else if(!recovering&&!recoveringLink)renderSession(data.session)})}catch(e){status(e.message,'error')}}
+// Links with expired auth tokens: display a useful error instead of claiming login succeeded.
+const fragment=new URLSearchParams(location.hash.slice(1));if(fragment.get('error')){recoveringLink=false;status('De herstellink is ongeldig of verlopen. Vraag een nieuwe aan met Wachtwoord herstellen.','error')}else if(recoveringLink){show('auth');status('Bezig met verwerken van de herstellink. Verschijnt het wachtwoordformulier niet, controleer dan je verbinding en vraag zo nodig een nieuwe herstellink aan.')} 
+</script>
+</body></html>
