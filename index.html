@@ -22,7 +22,7 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 const $=id=>document.getElementById(id);let client=null;let recovering=false;let recoveringLink=location.hash.includes('type=recovery')||location.search.includes('type=recovery');
 const modules=['Personeelsplanning','Weekoverzichten','Feesten & projecten','Kijkdagfiches','Voorbereidingsfiches','Afwerkingsfiches','Medewerkersbeheer','Facturen & kosten','Financiële resultaten'];
-$('modules').innerHTML=modules.map(x=>x==='Personeelsplanning'?`<a class="tile" href="planning.html" style="display:block;text-decoration:none;color:inherit"><h3>${x}</h3><span class="tag">Openen</span></a>`:`<div class="tile"><h3>${x}</h3><span class="tag">Binnenkort</span></div>`).join('');
+$('modules').innerHTML=modules.map(x=>x==='Medewerkersbeheer'?`<a class="tile" href="medewerkers.html" style="display:block;text-decoration:none;color:inherit"><h3>${x}</h3><span class="tag">Openen</span></a>`:x==='Medewerkersbeheer'?`<a class="tile" href="medewerkers.html" style="display:block;text-decoration:none;color:inherit"><h3>${x}</h3><span class="tag">Openen</span></a>`:x==='Personeelsplanning'?`<a class="tile" href="planning.html" style="display:block;text-decoration:none;color:inherit"><h3>${x}</h3><span class="tag">Openen</span></a>`:`<div class="tile"><h3>${x}</h3><span class="tag">Binnenkort</span></div>`).join('');
 function show(...names){['config','auth','recovery','dashboard'].forEach(n=>$(n).classList.toggle('hidden',!names.includes(n)))}
 function status(msg,type=''){const el=$('status');el.textContent=msg;el.className='notice '+type;el.classList.remove('hidden')}
 function clearStatus(){$('status').classList.add('hidden')}
