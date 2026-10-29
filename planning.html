@@ -37,9 +37,10 @@
  .paper-overview .paper-event table, .paper-overview .paper-event .paper-head {break-inside:avoid-page;page-break-inside:avoid}
  .paper-overview .paper-dept-row {break-after:avoid-page;page-break-after:avoid;height:auto!important}.paper-overview .paper-shifts {border-collapse:collapse!important;border-spacing:0!important}.paper-overview .paper-shifts tbody tr td {vertical-align:middle}
 }
+.month-arrow{min-width:33px;font-size:20px;line-height:1;padding:5px 9px}.month-quick{font-size:11px;padding:8px}.toolbar label{display:flex;align-items:center;gap:7px}.toolbar #month{min-width:165px}.month-quick.active{background:var(--aub);color:white}@media(max-width:750px){.month-quick{display:none}}
 </style><style id="pageRule"></style></head><body>
 <header><div><strong>MAURUSHOEVE</strong><small>PERSONEELSPLANNING · ONLINE</small></div><div class="toplink"><a href="index.html">← Dashboard</a><span id="who"></span><button class="secondary" id="logout">Afmelden</button></div></header>
-<main><div id="msg" class="notice">Verbinding met Supabase wordt gecontroleerd…</div><div id="app" hidden><div class="toolbar"><label>Maand <select id="month"></select></label><button id="toggle" class="secondary">Shiftoverzicht</button><button id="print">Afdrukken / PDF</button><button id="refresh" class="secondary">Vernieuwen</button><span id="saveInfo" class="saving"></span></div><div id="content"></div></div></main>
+<main><div id="msg" class="notice">Verbinding met Supabase wordt gecontroleerd…</div><div id="app" hidden><div class="toolbar"><button id="prevMonth" class="secondary month-arrow" title="Vorige maand" aria-label="Vorige maand">‹</button><label>Maand <select id="month"></select></label><button id="nextMonth" class="secondary month-arrow" title="Volgende maand" aria-label="Volgende maand">›</button><button id="prevQuick" class="secondary month-quick">Vorige maand</button><button id="todayMonth" class="secondary month-quick">Deze maand</button><button id="nextQuick" class="secondary month-quick">Volgende maand</button><button id="toggle" class="secondary">Shiftoverzicht</button><button id="print">Afdrukken / PDF</button><button id="refresh" class="secondary">Vernieuwen</button><span id="saveInfo" class="saving"></span></div><div id="content"></div></div></main>
 <script type="module">
 import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 const $=id=>document.getElementById(id), project=localStorage.getItem('mh_project_url'),key=localStorage.getItem('mh_publishable_key');let client,events=[],employees=[],shifts=[],mode='planning',busy=false;
@@ -102,7 +103,27 @@ if(!overview)str+=`<td class="digital-only">${shiftHours(s,'planned')}</td><td c
 str+=`<td class="act"><button class="secondary" data-delete="${s.id}" title="Shift verwijderen">Wissen</button></td>`;
 if(!overview)str+='<td class="print-only">__________</td><td class="print-only">__________</td><td class="print-only">______</td><td class="print-only" style="width:13%">______________</td>';
 return str+'</tr>'}
-function monthOptions(){const value=$('month').value;const months=[...new Set(events.map(e=>e.event_date.slice(0,7)))].sort();$('month').innerHTML=months.map(m=>`<option value="${m}">${new Date(m+'-15T12:00:00').toLocaleDateString('nl-BE',{month:'long',year:'numeric'})}</option>`).join('');$('month').value=months.includes(value)?value:(months.includes('2026-10')?'2026-10':months.at(-1)||'')}
+// Doorlopende maandkeuze: onafhankelijk van de maanden met bestaande feesten.
+// Bij de eerste opening wordt de lokale huidige maand gekozen, daarna onthouden we de selectie bij vernieuwen.
+function currentMonth(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`}
+function shiftMonth(value,delta){const [y,m]=value.split('-').map(Number);const d=new Date(y,m-1+delta,15);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`}
+function monthOptions(){
+ const selected=$('month').value||currentMonth();
+ const months=events.map(e=>(e.event_date||'').slice(0,7)).filter(x=>/^\d{4}-\d{2}$/.test(x));
+ const years=[...months.map(x=>Number(x.slice(0,4))),Number(currentMonth().slice(0,4)),Number(selected.slice(0,4))];
+ const first=Math.min(...years)-1,last=Math.max(...years)+1;
+ const options=[];
+ for(let y=first;y<=last;y++)for(let m=1;m<=12;m++){
+  const val=`${y}-${String(m).padStart(2,'0')}`;
+  const label=new Date(y,m-1,15).toLocaleDateString('nl-BE',{month:'long',year:'numeric'});
+  options.push(`<option value="${val}">${safe(label)}</option>`);
+ }
+ $('month').innerHTML=options.join('');$('month').value=selected;
+ updateMonthShortcuts();
+}
+function updateMonthShortcuts(){const chosen=$('month').value,now=currentMonth();for(const [id,m] of [['prevQuick',shiftMonth(now,-1)],['todayMonth',now],['nextQuick',shiftMonth(now,1)]])$(''+id).classList.toggle('active',chosen===m)}
+function chooseMonth(m){if(!$('month').querySelector(`option[value="${m}"]`)){const option=document.createElement('option');option.value=m;option.textContent=new Date(Number(m.slice(0,4)),Number(m.slice(5))-1,15).toLocaleDateString('nl-BE',{month:'long',year:'numeric'});$('month').add(option)}$('month').value=m;updateMonthShortcuts();render()}
+
 // Vaste volgorde: afdeling, functie, vervolgens stabiele aanmaakvolgorde.
 // Persoon, contractstatus en uren wijzigen de positie nooit.
 function shiftSort(a,b){
@@ -144,7 +165,7 @@ $('content').addEventListener('change',async e=>{const t=e.target,id=t.dataset.i
 // When a start time changes, also adjust an existing end crossing midnight.
 if(key.endsWith('_start')&&v){const endKey=key.replace('_start','_end'),endClock=clock(s[endKey]);if(endClock){let endDay=ev.event_date;if(endClock<v){const dt=new Date(endDay+'T12:00:00');dt.setDate(dt.getDate()+1);endDay=dt.toLocaleDateString('sv-SE')}patch[endKey]=ts(endDay,endClock)}}}else if(key==='contract_created')patch[key]=t.checked;else if(key==='break_minutes')patch[key]=Math.max(0,Math.round(Number(t.value)||0));await update(id,patch)});
 $('content').addEventListener('click',async e=>{const del=e.target.closest('[data-delete]'),plus=e.target.closest('[data-add]'),def=e.target.closest('[data-default]');if(del){if(!confirm('Deze shift definitief verwijderen uit Supabase?'))return;if(busy)return;busy=true;try{const {error}=await client.from('mh_shifts').delete().eq('id',del.dataset.delete);if(error)throw error;await reload()}catch(err){notice('Wissen mislukt: '+err.message,true)}finally{busy=false}}else if(plus){let root=plus.closest('.controls');await add(plus.dataset.add,root.querySelector('.department').value,root.querySelector('.job').value)}else if(def){let id=def.dataset.default,existing=shifts.filter(s=>s.event_id===id);for(const [dept,roles] of Object.entries(defaultRoles)){const counts={};for(const role of roles){counts[role]=(counts[role]||0)+1;const n=existing.filter(s=>department(s)===dept&&s.job_title.toLowerCase().trim()===role.toLowerCase()).length;if(counts[role]>n){await add(id,dept,role);existing=shifts.filter(s=>s.event_id===id)}}}}});
-$('month').onchange=render;$('toggle').onclick=()=>{mode=mode==='planning'?'overview':'planning';render()};$('print').onclick=()=>window.print();$('refresh').onclick=()=>reload().catch(e=>notice(e.message,true));$('logout').onclick=async()=>{await client.auth.signOut();location.href='index.html'};
+$('month').onchange=()=>{updateMonthShortcuts();render()};$('prevMonth').onclick=()=>chooseMonth(shiftMonth($('month').value,-1));$('nextMonth').onclick=()=>chooseMonth(shiftMonth($('month').value,1));$('prevQuick').onclick=()=>chooseMonth(shiftMonth(currentMonth(),-1));$('todayMonth').onclick=()=>chooseMonth(currentMonth());$('nextQuick').onclick=()=>chooseMonth(shiftMonth(currentMonth(),1));$('toggle').onclick=()=>{mode=mode==='planning'?'overview':'planning';render()};$('print').onclick=()=>window.print();$('refresh').onclick=()=>reload().catch(e=>notice(e.message,true));$('logout').onclick=async()=>{await client.auth.signOut();location.href='index.html'};
 async function boot(){if(!project||!key){notice('Open eerst Maurushoeve Beheer en stel de verbinding in.',true);return}client=createClient(project,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});const {data:{session},error}=await client.auth.getSession();if(error||!session){notice('Je bent niet aangemeld. Ga terug naar het dashboard om in te loggen.',true);return}$('who').textContent=session.user.email;$('app').hidden=false;await reload()}
 boot().catch(e=>notice('Kon planning niet laden: '+e.message,true));
 </script></body></html>
