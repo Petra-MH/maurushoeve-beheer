@@ -25,7 +25,7 @@
  .paper-overview {font-size:10px}
  .paper-overview .paper-event {margin-bottom:3mm;break-inside:avoid-page!important;page-break-inside:avoid!important;display:block;clear:both}
  .paper-overview .paper-head {background:#401216!important;color:#fff!important;font-size:12px;line-height:1.35;font-weight:bold;padding:8px 9px;break-after:avoid;print-color-adjust:exact;-webkit-print-color-adjust:exact}
- .paper-overview .paper-dept {background:#e9e8e7!important;color:#401216;font-weight:bold;padding:2px 7px;margin:0!important;break-after:avoid;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+ .paper-overview .paper-dept-row td {background:#e9e8e7!important;color:#401216;font-weight:bold;padding:2px 7px!important;border:0!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}
  .paper-overview table {margin:0!important;border-spacing:0!important;table-layout:fixed;width:100%;font-size:9px}
  .paper-overview th {background:#f3eeeb!important;color:#401216!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}
  .paper-overview th,.paper-overview td {padding:2px 6px;border-bottom:1px solid #d9d0cd}
@@ -35,7 +35,7 @@
  .paper-overview .paper-check {font-size:12px;text-align:center;color:#401216}
  .paper-overview .paper-meta {font-size:9px;color:#4e4142}
  .paper-overview .paper-event table, .paper-overview .paper-event .paper-head {break-inside:avoid-page;page-break-inside:avoid}
- .paper-overview .paper-event .paper-dept {break-after:avoid-page;page-break-after:avoid}
+ .paper-overview .paper-dept-row {break-after:avoid-page;page-break-after:avoid;height:auto!important}.paper-overview .paper-shifts {border-collapse:collapse!important;border-spacing:0!important}.paper-overview .paper-shifts tbody tr td {vertical-align:middle}
 }
 </style><style id="pageRule"></style></head><body>
 <header><div><strong>MAURUSHOEVE</strong><small>PERSONEELSPLANNING · ONLINE</small></div><div class="toplink"><a href="index.html">← Dashboard</a><span id="who"></span><button class="secondary" id="logout">Afmelden</button></div></header>
@@ -120,18 +120,16 @@ function paperOverview(evs){
  for(const ev of evs){
   const ss=eventShifts(ev.id);let dept='';
   out+=`<section class="paper-event"><div class="paper-head">${safe(nlDate(ev.event_date))} · ${safe(ev.customer_name)} · ${safe(ev.event_code||'')}</div>`;
+  out+='<table class="paper-shifts"><colgroup><col style="width:32%"><col style="width:32%"><col style="width:18%"><col style="width:9%"><col style="width:9%"></colgroup><tbody>';
   for(const s of ss){const d=department(s);
-   if(d!==dept){if(dept)out+='</tbody></table>';dept=d;
-    out+=`<div class="paper-dept">${safe(d)}</div><table><colgroup><col style="width:32%"><col style="width:32%"><col style="width:18%"><col style="width:9%"><col style="width:9%"></colgroup><tbody>`;
-   }
+   if(d!==dept){dept=d;out+=`<tr class="paper-dept-row"><td colspan="5">${safe(d)}</td></tr>`;}
    const employee=employees.find(x=>x.id===s.employee_id);
    const isOpen=!s.employee_id&&!nvt(s);
    const name=nvt(s)?'N.v.t.':(employee?.full_name||'');
    const hours=[clock(s.planned_start),clock(s.planned_end)].filter(Boolean).join(' - ');
    out+=`<tr><td>${safe(s.job_title)}</td><td class="write-name ${isOpen?'paper-open':''}">${safe(name)}</td><td class="paper-meta">${safe(hours)}</td><td class="paper-check">□</td><td class="paper-check">□</td></tr>`;
   }
-  if(dept)out+='</tbody></table>';
-  out+='</section>';
+  out+='</tbody></table></section>';
  }
  return out+'</div>';
 }
