@@ -3,10 +3,10 @@
 .sheet-page{background:#fff}.sheet-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin:6px 0 10px}.sheet-head h2{font-size:19px;margin:0}.sheet-head small{color:#756b6c}.sheet-caption{font-size:12px;color:#786b70;margin-bottom:8px}.compact-section{margin:12px 0 9px}.sheet-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 17px}.sheet-grid .field{min-width:0}.sheet-grid .field input{width:100%;min-height:34px}.sheet-grid .field textarea{min-height:95px}.sheet-grid .wide{grid-column:1/-1}.question-grid textarea{min-height:135px}.question-grid .field:last-child{grid-column:1/-1}.question-grid .field:last-child textarea{min-height:105px}.notes-pre{margin-top:10px}.notes-pre textarea{min-height:120px}.sheet-subtitle{font-size:13px;color:#663137;margin:0 0 6px}.second-sheet{margin-top:25px;border-top:1px dashed #d7c4b7;padding-top:10px}.second-sheet textarea{min-height:125px}.second-sheet .todo textarea{min-height:160px}.sheet-meta{font-size:11px;color:#86777a;text-align:right}.sheet-page .field label{font-size:11px}.sheet-page .section{font-size:12px;padding:6px 9px}.sheet-page .field input,.sheet-page .field textarea{background:#fff}.sheet-page .field{gap:3px}
 @media print{
   @page{size:A4;margin:10mm 11mm}
-  body{font-size:10px;line-height:1.25;color:#211a1d}main{max-width:none!important}
-  #detail{display:block!important;margin:0!important;padding:0!important}
-  .sheet-page{width:100%;height:277mm;max-height:277mm;overflow:hidden;break-inside:avoid;page-break-inside:avoid;position:relative}
-  .sheet-page + .sheet-page{page-break-before:always;break-before:page}
+  body{font-size:10px;line-height:1.25;color:#211a1d;margin:0!important}main{max-width:none!important;margin:0!important;padding:0!important}main>h1{display:none!important}
+  #detail{display:block!important;margin:0!important;padding:0!important;border:0!important;box-shadow:none!important;border-radius:0!important}
+  .sheet-page{display:block;width:100%;height:265mm;max-height:265mm;overflow:hidden;break-inside:avoid;page-break-inside:avoid;position:relative;margin:0!important;padding:0!important}
+  .sheet-page + .sheet-page{break-before:page;page-break-before:always}
   .sheet-head{margin:0 0 6px}.sheet-head h2{font-size:15px}.sheet-caption{margin-bottom:4px;font-size:9px}
   .sheet-page .compact-section{margin:8px 0 6px}.sheet-page .section{padding:5px 7px;margin:9px 0 6px;font-size:10px;background:#663137!important;color:white!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}
   .sheet-grid{gap:5px 12px}.sheet-page .field{gap:2px}.sheet-page .field label{font-size:9px}
