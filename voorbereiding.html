@@ -1,2 +1,168 @@
-<!doctype html><html lang="nl"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Voorbereidingsfiches</title><style>:root{--aub:#401216;--wine:#663137;--sand:#d7c4b7;--cream:#efe5d3}*{box-sizing:border-box}body{font:14px Montserrat,Arial,sans-serif;background:#f8f7f6;margin:0;color:#30282b;line-height:1.45}header{background:var(--aub);color:white;padding:17px 6%;display:flex;justify-content:space-between}a{color:inherit}main{max-width:1100px;margin:25px auto;padding:0 16px}.panel{background:#fff;border:1px solid #e4dcda;border-radius:9px;padding:22px;margin-bottom:18px}h1,h2{color:var(--aub)}h1{margin:0 0 15px}button{background:var(--aub);color:white;border:0;border-radius:5px;padding:10px 14px;cursor:pointer;font-weight:600}button.secondary{background:#eee7e6;color:var(--aub)}input,select,textarea{font:inherit;border:1px solid #d7c4b7;border-radius:5px;padding:8px;max-width:100%}textarea{width:100%;min-height:76px}.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:15px 0}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:12px;font-weight:bold;color:#663137}table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #eee;padding:9px;text-align:left}th{background:var(--aub);color:white}.scroll{overflow:auto}.muted{color:#746969}.section{background:var(--wine);color:white;padding:9px 12px;margin:20px 0 14px;font-weight:bold}.tick{padding:8px 3px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #eee}.tick input{width:18px;height:18px}#notice{background:#efe5d3;padding:12px;margin-bottom:15px}.printsheet{background:white;padding:16px}.small{font-size:12px}@media(max-width:650px){.grid{grid-template-columns:1fr}}@media print{header,.no-print,#notice,.toolbar,button{display:none!important}body{background:white}main{max-width:none;margin:0;padding:0}.panel,.printsheet{border:0;padding:0;box-shadow:none}.section{print-color-adjust:exact;-webkit-print-color-adjust:exact}h1{font-size:20px}textarea,input,select{border:0;resize:none} .grid{grid-template-columns:1fr 1fr} .tick{break-inside:avoid} @page{size:A4;margin:12mm}}</style><header><strong>MAURUSHOEVE · VOORBEREIDINGSFICHES</strong><a href="index.html">Dashboard</a></header><main><h1>Voorbereidingsfiches</h1><div id="notice">Verbinding controleren…</div><section class="panel no-print"><div class="toolbar"><label>Project <select id="project"></select></label><label>Soort fiche <select id="category"><option value="event">Maurushoeve event</option><option value="cat">Externe catering</option></select></label><button id="refresh" class="secondary">Vernieuwen</button></div></section><section id="fiche" class="panel" hidden></section></main><script type="module">import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';const $=id=>document.getElementById(id);const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));let db;function message(s){$('notice').textContent=s}function todayISO(d){let x=new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')}function pretty(s){if(!s)return '—';let d=new Date(s+'T12:00:00');return isNaN(+d)?String(s):d.toLocaleDateString('nl-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}async function connect(){let url=localStorage.getItem('mh_project_url'),key=localStorage.getItem('mh_publishable_key');if(!url||!key)throw Error('Stel eerst de Supabase-verbinding in via index.html');db=createClient(url,key);let {data:{session},error}=await db.auth.getSession();if(error||!session)throw Error('Meld je eerst aan via het dashboard.')}async function get(t,q='*'){let {data,error}=await db.from(t).select(q);if(error)throw error;return data||[]}async function save(t,obj,conflict){let query=db.from(t).upsert(obj,conflict?{onConflict:conflict}:undefined);let {error}=await query;if(error)throw error}function field(label,v,name,type='text'){return `<div class="field"><label>${label}</label><input data-key="${name}" type="${type}" value="${esc(v)}"></div>`}function area(label,v,name){return `<div class="field"><label>${label}</label><textarea data-key="${name}">${esc(v)}</textarea></div>`}function readFields(){return Object.fromEntries([...document.querySelectorAll('[data-key]')].map(x=>[x.dataset.key,x.value||null]))}
-let events=[],prepared=[],current=null;const base={aanmaak:['Kijkdagfiche verwerkt - relevante afspraken overgenomen in project','1e bespreking','2e bespreking','Tafelplan opgevraagd','Event-ID opgemaakt - planning, afspraken, leveranciers en taken'],vier:['Remindermail klant: definitief aantal personen, intoleranties en wijzigingen','Weekoverzicht MEP voorbereiden en kijkdagen toevoegen','Clipboard maken - documenten uit map halen'],twee:['Contact klant - aantallen, intoleranties en wijzigingen overlopen','Offerte en Event-ID aanpassen en eventuele update versturen','MEP-lijsten finaliseren en afdrukken','Bestellingen plaatsen','Leveranciers contacteren','Personeelsplanning controleren','Grondplannen opmaken','Clipboards controleren']};const catering={aanmaak:['Bespreking','Locatiebezoek'],vier:['Remindermail: definitieve aantallen, intoleranties en wijzigingen','Weekoverzicht MEP voorbereiden','Clipboard maken en praktische afspraken printen'],twee:['Contact klant - laatste afspraken','Offerte en event-ID controleren','MEP-lijsten in tweevoud afdrukken','Bestellingen plaatsen - leveranciers, dranken, materiaal','Clipboard controleren','Logistieke en cateringafspraken controleren']};function offset(s,n){let d=new Date(s+'T12:00:00');d.setDate(d.getDate()-n);return pretty(todayISO(d))}function render(){let e=current,n=prepared.find(x=>x.event_id===String(e.id))||{},isCat=$('category').value==='cat',tasks=isCat?catering:base;$('fiche').hidden=false;$('fiche').innerHTML=`<div class="toolbar no-print"><button id="save">Wijzigingen bewaren</button><button class="secondary" onclick="window.print()">Afdrukken / PDF</button></div><h1>VOORBEREIDINGSFICHE ${isCat?'CATERING':'EVENTS'}</h1><p><strong>${esc(e.customer_name)}</strong> · ${pretty(e.event_date)} · project #${esc(e.teamleader_projectnr||'')}</p><div class="section">EVENTGEGEVENS</div><div class="grid">${field('Projectcoördinator',n.coordinator,'coordinator')}${field('Eventcoördinator',n.eventco,'eventco')}${field('Concept',n.concept,'concept')}${field('Aantal gasten',n.guests,'guests')}${field('Beginuur',n.event_start,'event_start')}${field('Weddingplanner',n.weddingplanner,'weddingplanner')}${area('Bijzonderheden',n.special_notes,'special_notes')}${area('Opmerkingen',n.remarks,'remarks')}</div>${[['aanmaak','AANMAAK PROJECT'],['vier','4 WEKEN VOOR EVENT · '+offset(e.event_date,28)],['twee','2 WEKEN VOOR EVENT · '+offset(e.event_date,14)]].map(([k,heading])=>`<div class="section">${heading}</div>${tasks[k].map((t,i)=>`<label class="tick"><input data-check="${k}_${i}" type="checkbox" ${n.checks?.[k+'_'+i]?'checked':''}><span>${esc(t)}</span></label>`).join('')}`).join('')}`;$('save').onclick=async()=>{try{let fields=readFields(),checks=Object.fromEntries([...document.querySelectorAll('[data-check]')].map(x=>[x.dataset.check,x.checked]));await save('mh_preparations',{event_id:String(e.id),...fields,checks},'event_id');message('Voorbereidingsfiche opgeslagen.');await refreshNotes();}catch(err){message('Bewaren mislukt: '+err.message)}}}async function refreshNotes(){prepared=await get('mh_preparations');}async function load(){events=(await get('mh_events','id,teamleader_projectnr,event_date,customer_name')).filter(x=>x.event_date).sort((a,b)=>a.event_date.localeCompare(b.event_date));await refreshNotes();$('project').innerHTML=events.map(x=>`<option value="${esc(x.id)}">${esc(x.customer_name)} · ${esc(x.event_date)} · #${esc(x.teamleader_projectnr)}</option>`).join('');if(events.length){current=events[0];render()}else message('Nog geen projecten in de database.')}$('project').onchange=()=>{current=events.find(x=>String(x.id)===$('project').value);render()};$('category').onchange=render;$('refresh').onclick=load;try{await connect();await load();message('Kies een project, vul de voorbereiding in en sla op.')}catch(e){message(e.message)}</script></html>
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Maurushoeve | Voorbereidingsfiches</title>
+<style>
+:root{--aub:#401216;--wine:#663137;--sand:#d7c4b7;--cream:#efe5d3;--ink:#30282b}*{box-sizing:border-box}body{margin:0;background:#f7f6f5;color:var(--ink);font:14px Montserrat,Arial,sans-serif;line-height:1.4}header{background:var(--aub);color:white;padding:17px max(24px,calc((100vw - 1100px)/2));display:flex;justify-content:space-between;gap:16px}header a{color:white}main{max-width:1100px;margin:25px auto;padding:0 16px}h1,h2{color:var(--aub)}h1{font-size:27px;margin:0 0 12px}.toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-bottom:14px}.toolbar label{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:12px}.toolbar input{min-width:250px}.toolbar select{min-width:190px}input,select,textarea{font:inherit;border:1px solid #d8c9c6;border-radius:5px;padding:8px;background:#fff;color:var(--ink);width:100%;min-width:0}textarea{resize:vertical;min-height:64px}button{border:0;border-radius:5px;padding:10px 13px;background:var(--aub);color:#fff;font-weight:700;cursor:pointer}button.secondary{background:#eee7e6;color:var(--aub)}button:disabled{opacity:.55}#notice{padding:10px 14px;background:var(--cream);margin-bottom:15px;border-left:4px solid var(--wine)}#notice.error{background:#fce6e1;border-color:#a9372b}.panel{background:white;border:1px solid #e6ddda;border-radius:8px;padding:20px;margin-bottom:16px}.sheet-title{text-align:center;font-size:21px;letter-spacing:.2px;margin:4px 0 12px}.subhead{text-align:center;color:#76696a;margin-top:-5px;margin-bottom:14px}.section{background:var(--wine);color:#fff;padding:7px 10px;margin:18px 0 10px;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}.field{display:flex;flex-direction:column;gap:3px}.field label{font-size:12px;color:var(--wine);font-weight:700}.field.static .val{padding:7px 0;min-height:34px}.full{grid-column:1/-1}.tasks{width:100%;border-collapse:collapse}.tasks th{font-size:11px;text-align:left;border-bottom:1px solid #d7c4b7;color:var(--wine);padding:6px 4px}.tasks td{padding:5px 4px;border-bottom:1px solid #eee;vertical-align:top}.tasks .check{width:28px;text-align:center}.tasks .date{width:132px}.tasks input[type=checkbox]{width:18px;height:18px;accent-color:var(--wine);margin:2px 0}.tasks input[type=date]{font-size:12px;padding:4px}.task-note{font-size:11px;color:#73696a;display:block}.print-note{display:none}.foot{color:#82777a;font-size:11px;margin-top:14px}.subtoolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.page-break{break-before:page}.onlyprint{display:none}.work-page{margin-top:12px}.quiet{color:#76696a}.status-ok{color:#245c3e}.pill{padding:3px 7px;background:var(--cream);border-radius:4px;font-size:12px}.summary{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+@media(max-width:660px){.grid{grid-template-columns:1fr}.toolbar label{width:100%}.toolbar input,.toolbar select{min-width:0}.full{grid-column:auto}}
+@page{size:A4;margin:11mm 12mm}
+@media print{header,.toolbar,.no-print,#notice,button,.foot{display:none!important}body{background:white;font-size:10px;line-height:1.25}main{max-width:none;margin:0;padding:0}.panel{border:none;padding:0;margin:0;box-shadow:none}.sheet-title{font-size:17px;margin:0 0 7px}.subhead{margin:0 0 7px;font-size:10px}.section{margin:10px 0 7px;padding:5px 8px;font-size:11px}.grid{gap:5px 12px}.field label{font-size:9px}.field input,.field textarea{border:0;border-bottom:1px solid #ddd;border-radius:0;padding:4px 1px;background:none;font-size:10px;resize:none;min-height:0;overflow:visible}.field textarea{height:40px}.field.static .val{padding:3px 0;min-height:22px}.tasks{font-size:9px}.tasks th{font-size:9px;padding:4px 3px}.tasks td{padding:3px;border-bottom:1px solid #ddd}.tasks .date{width:93px}.tasks .check{width:24px}.tasks input[type=date]{padding:0;border:0;font-size:9px}.tasks input[type=checkbox]{width:13px;height:13px}.task-note{font-size:8px}.page-break{break-before:page;page-break-before:always}.print-note{display:block}.onlyprint{display:block}.work-page{margin-top:0} .panel,.section,.tasks tr{break-inside:avoid} .grid .field{break-inside:avoid}}
+
+/* Tweezijdige A4-fiche: beide bladzijden volledig afzonderlijk en compact. */
+.print-page{min-width:0}.print-page .tasks td:nth-child(2){line-height:1.25}
+@media print{
+ @page{size:A4 portrait;margin:8mm 10mm}
+ html,body{width:100%;margin:0;padding:0}
+ main{width:100%;max-width:none;margin:0;padding:0}
+ #fiche{display:block!important}
+ .print-page{display:block!important;width:100%;margin:0!important;padding:0!important;border:0!important;box-shadow:none!important;break-inside:auto;page-break-inside:auto}
+ .print-page.front{break-after:page;page-break-after:always}
+ .print-page.back{break-before:auto;page-break-before:auto;break-after:auto}
+ .print-page .section{font-size:9px;margin:6px 0 3px;padding:4px 6px}
+ .print-page .sheet-title{font-size:15px;margin:0 0 2px}
+ .print-page .subhead{font-size:8px;margin:0 0 4px}
+ .compact-info{grid-template-columns:1fr 1fr;gap:0 10px}
+ .compact-info .field{display:grid;grid-template-columns:98px minmax(0,1fr);gap:4px;align-items:center;min-height:17px}
+ .compact-info .field label{font-size:8px;margin:0}
+ .compact-info .field .val{font-size:8px;padding:0;min-height:0}
+ .compact-info .field input{font-size:8px;padding:1px 0;border-bottom:1px solid #eee;min-height:17px}
+ .tasks{table-layout:fixed;font-size:8px}
+ .tasks th{font-size:8px;padding:2px 3px}
+ .tasks td{padding:2px 3px;line-height:1.14}
+ .tasks tr{break-inside:avoid;page-break-inside:avoid}
+ .tasks .check{width:19px}.tasks .date{width:70px}
+ .tasks input[type=checkbox]{width:11px;height:11px;margin:0}
+ .tasks input[type=date]{font-size:7px;max-width:70px}
+ .task-note{font-size:7px}
+ .notes textarea{height:32px;min-height:32px;border:1px solid #ddd;box-sizing:border-box}
+ .foot{display:block!important;font-size:7px;margin-top:3px}
+}
+
+/* Projectbalk in dezelfde auberginekleuren als het weekoverzicht. */
+.project-banner{background:#663137;color:#fff;text-align:center;font-weight:800;font-size:23px;line-height:1.22;padding:15px 14px;margin:0 0 7px;border-radius:5px;overflow-wrap:anywhere;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+.back-reference{color:#401216;text-align:center;font-weight:800;font-size:13px;margin:0 0 1px;overflow-wrap:anywhere}
+.back-meta{text-align:center;color:#76696a;font-size:10px;margin:0 0 5px}
+@media print{
+ .project-banner{font-size:16px!important;line-height:1.16;padding:7px 8px!important;border-radius:0;margin:0 0 3px!important;background:#663137!important;color:#fff!important}
+ .print-page.front .subhead{margin:0 0 3px!important}
+ .back-reference{font-size:10px;margin:0 0 1px}
+ .back-meta{font-size:8px;margin:0 0 2px}
+ .print-page.back{break-before:page!important;page-break-before:always!important}
+}
+</style></head><body>
+<header><strong>MAURUSHOEVE · VOORBEREIDINGSFICHES</strong><a href="index.html">← Dashboard</a></header>
+<main><div id="notice">Verbinding met Supabase controleren…</div>
+<section class="panel no-print"><div class="toolbar"><label>Project zoeken<input id="filter" placeholder="Klant, titel of projectnummer"></label><label>Project<select id="project"></select></label><label>Soort fiche<select id="category"><option value="event">Event Maurushoeve</option><option value="cat">Externe catering</option></select></label><button id="reload" class="secondary">Vernieuwen</button></div><div class="subtoolbar"><button id="save">Wijzigingen bewaren</button><button id="print" class="secondary">Afdrukken / PDF</button><span class="quiet" id="saveInfo"></span></div></section>
+<div id="fiche" hidden>
+<section class="panel print-page front">
+<div class="project-banner" id="title">Projecttitel</div><p class="subhead" id="subtitle"></p>
+<div class="section">EVENTGEGEVENS</div><div id="baseFields" class="grid compact-info"></div>
+<div class="section">PRAKTISCHE INFO · AAN TE VULLEN</div><div id="editFields" class="grid compact-info"></div>
+<div class="section">AANMAAK PROJECT · CONTROLE</div><div id="creationTasks"></div>
+</section>
+<section class="panel print-page back">
+<div class="back-reference" id="flowTitle">Projecttitel</div><p class="back-meta" id="flowSubtitle"></p>
+<div class="section">4 WEKEN VOOR EVENT · <span id="fourDate"></span></div><div id="fourTasks"></div>
+<div class="section">2 WEKEN VOOR EVENT · <span id="twoDate"></span></div><div id="twoBasicTasks"></div>
+<div class="section">2 WEKEN VOOR EVENT · DOCUMENTEN EN LOGISTIEK</div><div id="twoTasks"></div>
+<div class="section">1 WEEK VOOR EVENT · <span id="oneDate"></span></div><div id="oneTasks"></div>
+<div class="section">OPMERKINGEN & OPENSTAANDE PUNTEN</div>
+<div class="field notes"><textarea data-field="special_notes" rows="4"></textarea></div>
+<div class="section">AANVULLENDE AFSPRAKEN</div>
+<div class="field notes"><textarea data-field="remarks" rows="3"></textarea></div>
+<div class="foot">Maurushoeve · Projectgegevens uit Teamleader · Checklist en aanvullingen bewaard in Supabase.</div>
+</section></div>
+</main><script type="module">
+import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate=s=>{if(!s)return '—';const [y,m,d]=String(s).slice(0,10).split('-').map(Number);if(!d)return String(s);return new Date(y,m-1,d).toLocaleDateString('nl-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})};
+const cleanProjectTitle=(v)=>String(v||'').replace(/\s*[-–—]\s*(?:(?:maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)\s+)?\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}\s*$/i,'').trim();
+const subDays=(s,n)=>{if(!s)return '—';let d=new Date(String(s).slice(0,10)+'T12:00:00');if(isNaN(+d))return '—';d.setDate(d.getDate()-n);return fmtDate(d.toISOString().slice(0,10))};
+let db,events=[],notes=[],details=[],current=null,loading=false;
+function notice(s,err=false){$('notice').textContent=s;$('notice').classList.toggle('error',err)}
+const tasks={event:{creation:[
+'Kijkdagfiche verwerkt – relevante afspraken opgenomen in project',
+'1e bespreking', '2e bespreking', 'Tafelplan opgevraagd',
+'Event-ID opgemaakt – planning, afspraken, leveranciers en openstaande taken toegevoegd'],
+four:[
+'Remindermail klant: definitief aantal personen, intoleranties, wijzigingen',
+'Weekoverzicht MEP – kijkdagen niet vergeten',
+'Clipboard maken – documenten uit map halen'],
+two:[
+'Contact klant: definitieve aantallen, intoleranties en afspraken overlopen',
+'Offerte en Event-ID aanpassen – update naar klant',
+'MEP-lijsten finaliseren en printen in 3-voud (keuken – logistiek/eventco – bar)',
+'Bestellingen plaatsen (Nadia’s Cakes / Ijster / …)',
+'Leveranciers contacteren voor dagplanning (verplaatst naar 1 week vooraf)',
+'Personeel controleren: is een update nodig?',
+'Grondplannen per zaal uittekenen voor logistiek en opbouw',
+'BAR · MEP-lijst',
+'BAR · Fiche drankenlijst op verbruik',
+'EVENTCO / ZAAL · Event-ID of begeleidende tekst offerte',
+'EVENTCO / ZAAL · MEP-lijst (2× bij receptie in crypte); taakverdeling',
+'EVENTCO / ZAAL · Uitgetekende grondplannen per zaal',
+'EVENTCO / ZAAL · Menukaartjes SD / aanbodkaartjes WD en standjes',
+'EVENTCO / ZAAL · Drankaanbod open bar receptie – dansfeest',
+'Namen op A4 + lamineren bij meerdere feesten op dezelfde dag',
+'Tafelplan: 2× per gang bij SD, dieetwensen aanduiden; 1× keuken',
+'Briefing voorbereiden',
+'Prestatiefiche personeel ophangen aan deur koelcel',
+'Onderhoudsfiche poetsploeg indien nodig ophangen aan achterdeur'],
+one:[
+'Leveranciers contacteren en definitieve dagplanning bevestigen',
+'Controle beide clipboards: BAR + EVENTCO / ZAAL',
+'Finale personeelsplanning overlopen']},
+cat:{creation:['Bespreking','Locatiebezoek'],four:[
+'Remindermail klant: definitieve aantallen, intoleranties en wijzigingen',
+'Weekoverzicht MEP – kijkdagen niet vergeten',
+'Clipboard maken + praktische afspraken en eerste pagina offerte printen'],two:[
+'Contact klant: laatste aantallen, intoleranties en afspraken',
+'Offerte en Event-ID bijwerken; afspraken met klant bevestigen',
+'MEP-lijsten finaliseren en printen in 2-voud (keuken – logistiek)',
+'Bestellingen plaatsen: Nadia’s Cakes, Ijster, dranken en ABC',
+'Controle personeel en logistiek',
+'EVENTCO / LOGISTIEK · MEP-lijst',
+'EVENTCO / LOGISTIEK · Begeleidende tekst offerte',
+'EVENTCO / LOGISTIEK · Praktische afspraken locatiebezoek',
+'EVENTCO / LOGISTIEK · Stocklijst dranken op verbruik',
+'EVENTCO / LOGISTIEK · Aanbodkaartjes WD – standjes in metalen houder',
+'Briefing en taakverdeling voorbereiden',
+'Bestelbon huurmateriaal',
+'Prestatiefiche personeel',
+'QR-code arbeidsreglement',
+'Registratie temperatuur bij transport'],
+one:[
+'Leveranciers en locatie contacteren voor definitieve dagplanning',
+'Controle clipboard; offertes blijven op bureau',
+'Finale personeelsplanning, transport en huurmateriaal overlopen']}};
+const field=(label,v,key,kind='text')=>`<div class="field"><label>${esc(label)}</label>${kind==='textarea'?`<textarea data-field="${key}" rows="2">${esc(v)}</textarea>`:`<input data-field="${key}" type="${kind}" value="${esc(v)}">`}</div>`;
+const stat=(label,v)=>`<div class="field static"><label>${esc(label)}</label><div class="val">${esc(v||'—')}</div></div>`;
+function taskHtml(group,items,checks){return `<table class="tasks"><thead><tr><th class="check">✓</th><th>ACTIE</th><th class="date">DATUM UITGEVOERD</th></tr></thead><tbody>${items.map((label,i)=>{let k=`${$('category').value}_${group}_${i}`,old=`${group}_${i}`,legacy=(!checks.fiche_type||checks.fiche_type===$('category').value);let prev=checks?.[k]??(legacy?checks?.[old]:false),date=checks?.[`date_${k}`]??(legacy?checks?.[`date_${old}`]:'');return `<tr><td class="check"><input aria-label="${esc(label)}" type="checkbox" data-check="${k}" ${prev?'checked':''}></td><td>${esc(label)}</td><td><input aria-label="Datum uitvoering: ${esc(label)}" type="date" data-check-date="${k}" value="${esc(date)}"></td></tr>`}).join('')}</tbody></table>`}
+function taskHtmlIndexed(group,all,indices,checks){return `<table class="tasks"><thead><tr><th class="check">✓</th><th>ACTIE</th><th class="date">DATUM</th></tr></thead><tbody>${indices.map(i=>{let label=all[i],k=`${$('category').value}_${group}_${i}`,legacy=(!checks.fiche_type||checks.fiche_type===$('category').value);let prev=checks?.[k]??(legacy?checks?.[`${group}_${i}`]:false),date=checks?.[`date_${k}`]??(legacy?checks?.[`date_${group}_${i}`]:'');return `<tr><td class="check"><input type="checkbox" data-check="${k}" aria-label="${esc(label)}" ${prev?'checked':''}></td><td>${esc(label)}</td><td><input type="date" data-check-date="${k}" value="${esc(date)}" aria-label="Datum: ${esc(label)}"></td></tr>`}).join('')}</tbody></table>`}
+function relevantDetail(e){return details.find(x=>String(x.event_id)===String(e.id))||{}}
+function savedNote(e){return notes.find(x=>String(x.event_id)===String(e.id))||{}}
+function render(){const e=current;if(!e){$('fiche').hidden=true;return};$('fiche').hidden=false;let n=savedNote(e),d=relevantDetail(e),cat=$('category').value;let pack=tasks[cat],checks=n.checks||{};
+const projectName=cleanProjectTitle(e.project_title)||e.customer_name||'Project';
+$('title').textContent=projectName;$('flowTitle').textContent=projectName;
+$('subtitle').textContent=`${fmtDate(e.event_date)} · Project ${e.teamleader_projectnr||'—'} · ${cat==='cat'?'Catering':'Maurushoeve'}`;
+$('flowSubtitle').textContent=`Klant: ${e.customer_name||'—'} · ${fmtDate(e.event_date)}`;
+$('baseFields').innerHTML=[stat('Klant',e.customer_name),stat('Datum',fmtDate(e.event_date)),stat('Type feest',e.event_type),stat('Projectnummer',e.teamleader_projectnr),stat('Status',e.status),stat('Afdeling',cat==='cat'?'Catering':'Maurushoeve'),stat('Locatie',d.location||'')].join('');
+$('editFields').innerHTML=[field('Projectcoördinator',n.coordinator,'coordinator'),field('Eventcoördinator',n.eventco,'eventco'),field('Concept',n.concept??d.concept??e.concept,'concept'),field('Aantal gasten',n.guests??d.guests??e.guest_count_note,'guests'),field('Beginuur',n.event_start??d.event_start??e.start_time,'event_start'),field('Weddingplanner',n.weddingplanner??d.weddingplanner,'weddingplanner'),field('1e bespreking',n.appointment_1,'appointment_1','date'),field('2e bespreking',n.appointment_2,'appointment_2','date'),field('Datum kijkdag',n.kijkdag_date,'kijkdag_date','date')].join('');
+$('creationTasks').innerHTML=taskHtml('aanmaak',pack.creation,checks);
+$('fourTasks').innerHTML=taskHtml('vier',pack.four,checks);
+const basic=cat==='cat'?[0,1,2,3,4]:[0,1,2,3,5,6];
+const remaining=pack.two.map((v,i)=>i).filter(i=>!basic.includes(i) && !(cat==='event'&&i===4));
+$('twoBasicTasks').innerHTML=taskHtmlIndexed('twee',pack.two,basic,checks);
+$('twoTasks').innerHTML=taskHtmlIndexed('twee',pack.two,remaining,checks);
+$('oneTasks').innerHTML=taskHtml('een',pack.one,checks);
+$('fourDate').textContent=subDays(e.event_date,28);
+$('twoDate').textContent=subDays(e.event_date,14);
+$('oneDate').textContent=subDays(e.event_date,7);
+for(let t of document.querySelectorAll('[data-field]'))if(t.dataset.field==='remarks')t.value=n.remarks||'';else if(t.dataset.field==='special_notes')t.value=n.special_notes||'';
+$('saveInfo').textContent='';}
+function filterEvents(){let q=$('filter').value.trim().toLocaleLowerCase('nl');let list=events.filter(e=>!q||[e.customer_name,e.project_title,e.teamleader_projectnr].some(v=>String(v||'').toLocaleLowerCase('nl').includes(q)));let prev=current?.id;$('project').innerHTML=list.map(e=>`<option value="${esc(e.id)}">${esc(e.event_date)} · ${esc(e.project_title||e.customer_name)} · #${esc(e.teamleader_projectnr||'—')}</option>`).join('');current=list.find(e=>e.id===prev)||list.find(e=>e.event_date>=new Date().toISOString().slice(0,10))||list[0]||null;if(current){$('project').value=current.id;const t=savedNote(current).checks?.fiche_type;if(t==='cat'||t==='event')$('category').value=t;}render()}
+async function load(){if(loading)return;loading=true;try{let all=[],off=0;while(true){let {data,error}=await db.from('mh_events').select('id,teamleader_projectnr,event_date,customer_name,project_title,event_type,status,concept,guest_count_note,start_time').order('event_date',{ascending:true}).range(off,off+999);if(error)throw error;all.push(...data);if(data.length<1000)break;off+=1000}events=all.filter(x=>x.event_date&&x.status!=='geklasseerd').sort((a,b)=>a.event_date.localeCompare(b.event_date));let r=await db.from('mh_preparations').select('*');if(r.error)throw r.error;notes=r.data||[];let det=await db.from('mh_event_week_details').select('*');details=det.error?[]:det.data||[];if(det.error)console.warn('Weekaanvullingen niet beschikbaar:',det.error.message);filterEvents();notice(`${events.length} projecten beschikbaar · ${notes.length} voorbereidingsfiches met opgeslagen gegevens.`)}catch(e){notice('Projecten laden mislukt: '+e.message,true)}finally{loading=false}}
+async function save(){if(!current)return;let btn=$('save');btn.disabled=true;try{let n=savedNote(current),fields=Object.fromEntries([...document.querySelectorAll('[data-field]')].map(el=>[el.dataset.field,el.value.trim()||null]));let checks={...(n.checks||{})};for(let el of document.querySelectorAll('[data-check]'))checks[el.dataset.check]=el.checked;for(let el of document.querySelectorAll('[data-check-date]'))checks['date_'+el.dataset.checkDate]=el.value||null;checks['fiche_type']=$('category').value;
+let payload={event_id:String(current.id),...fields,checks,updated_at:new Date().toISOString()};const {data,error}=await db.from('mh_preparations').upsert(payload,{onConflict:'event_id'}).select('*').single();if(error)throw error;notes=notes.filter(x=>String(x.event_id)!==String(current.id));notes.push(data);$('saveInfo').textContent='Opgeslagen en gecontroleerd';notice('Voorbereidingsfiche opgeslagen in Supabase.');}catch(e){notice('Bewaren mislukt: '+e.message,true);$('saveInfo').textContent='Niet opgeslagen'}finally{btn.disabled=false}}
+async function start(){try{let url=localStorage.getItem('mh_project_url'),key=localStorage.getItem('mh_publishable_key');if(!url||!key)throw Error('Open eerst het dashboard en stel je Supabase-verbinding in.');db=createClient(url,key);let {data:{session},error}=await db.auth.getSession();if(error||!session)throw Error('Meld je eerst aan via het dashboard.');await load()}catch(e){notice(e.message,true)}}
+$('project').addEventListener('change',()=>{current=events.find(e=>e.id===$('project').value)||null;const saved=current?savedNote(current).checks?.fiche_type:null;if(saved==='cat'||saved==='event')$('category').value=saved;render()});$('filter').addEventListener('input',filterEvents);$('category').addEventListener('change',render);$('reload').addEventListener('click',load);$('save').addEventListener('click',save);$('print').addEventListener('click',()=>window.print());start();
+</script></body></html>
