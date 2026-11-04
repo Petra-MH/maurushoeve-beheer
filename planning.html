@@ -3,44 +3,10 @@
 <title>Maurushoeve | Online personeelsplanning</title>
 <style>
 :root{--aub:#401216;--wine:#663137;--line:#d9d0cd;--bg:#f7f6f5;--gray:#e9e8e7;--ink:#292427;--orange:#9e4011}*{box-sizing:border-box}body{font:13px/1.45 Montserrat,Arial,sans-serif;color:var(--ink);background:var(--bg);margin:0}header{background:var(--aub);color:white;padding:16px max(24px,calc((100vw - 1360px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px}header strong{font-size:20px;letter-spacing:1.6px}header small{display:block;letter-spacing:1.1px;font-size:10px;color:#ddc6c6}a{color:var(--wine)}header a{color:white}main{max-width:1400px;margin:22px auto;padding:0 16px}.toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px}button,select,input{font:inherit;border:1px solid var(--line);border-radius:5px;padding:7px 9px}button{cursor:pointer;background:var(--aub);color:white;border-color:var(--aub);font-weight:600}button.secondary{background:white;color:var(--aub)}button:disabled{opacity:.5;cursor:not-allowed}.notice{background:#fff5dd;border-left:4px solid #ae7210;padding:12px;margin:12px 0}.success{background:#e9f5eb;border-color:#257a36}.error{background:#fdeceb;border-color:#a12c23}.event{background:white;border:1px solid var(--line);border-radius:9px;overflow:hidden;margin:16px 0 25px;break-inside:avoid-page}.event-head{background:var(--aub);color:white;display:flex;justify-content:space-between;gap:8px;padding:11px 13px;font-weight:bold}.info{padding:12px;display:flex;gap:12px;flex-wrap:wrap}.info div{min-width:100px}.info b{display:block;color:var(--wine)}table{border-collapse:collapse;width:100%;font-size:12px}th{background:var(--aub);color:white;text-align:left;padding:7px 5px}td{border-bottom:1px solid #e4e0de;padding:5px;vertical-align:middle}td input[type=time],td input[type=number]{max-width:100%;min-width:0;width:96px}td input[type=number]{width:65px}td select{max-width:185px;width:100%}.job-edit{width:100%;min-width:120px;max-width:200px;background:transparent;border:1px solid transparent;padding:4px}.job-edit:focus{background:white;border-color:var(--wine)}.dept td{background:var(--gray);font-weight:700;color:#383133}.open{background:#fce4c7;color:#8c3508;font-weight:bold}.na{opacity:.65;background:#f5f5f5}.act{white-space:nowrap}.act button{padding:5px 7px}.controls{display:flex;flex-wrap:wrap;gap:7px;align-items:center;padding:12px;border-top:1px solid var(--line)}.muted{color:#716b69}.print-only{display:none}.overview .event-head{font-size:12px}.full{overflow-x:auto}.sep td{background:var(--aub);color:white;font-weight:700;padding:8px}.tight{font-size:11px}.saving{font-size:12px;color:#74432d}.total{text-align:right;padding:10px;font-weight:bold}.toplink{display:flex;gap:14px;align-items:center}.empty{background:white;border:1px solid var(--line);padding:30px;border-radius:8px}.chip{background:#fce1c2;color:#874013;padding:3px 6px;border-radius:4px}.print-title{display:none}
-@media print{@page{size:A4 landscape;margin:18mm 13mm 8mm}body{background:white;font-size:9px}header,.toolbar,.notice,.controls,.act,.digital-only,.toplink{display:none!important}main{padding:0;margin:0;max-width:none}.event{border:0;border-radius:0;break-before:page;break-inside:auto;margin:0}.event:first-child{break-before:auto}.event-head{padding:7px!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}.info{padding:6px;gap:8px}.info div{min-width:80px}table{font-size:9px}td,th{padding:4px 3px}th,.dept td,.sep td{print-color-adjust:exact;-webkit-print-color-adjust:exact}input,select{border:0!important;background:transparent!important;color:black!important;padding:0!important;appearance:none!important;max-width:100%!important;min-width:0!important;font:inherit!important}.print-only{display:table-cell!important}.event-head,.sep td{background:#401216!important;color:white!important}.dept td{background:#e9e8e7!important}.print-title{display:block;font-size:16px;color:#401216;margin:5px 0 12px}.overview-print .event{break-before:auto}.overview-print table{font-size:8px}.overview-print .sep{break-inside:avoid}}
-
-@media print{
-  #content:not(.overview-print) .event table thead th:first-child,
-  #content:not(.overview-print) .event table tbody tr:not(.dept)>td:first-child{display:none!important}
-  #content:not(.overview-print) .event table tbody tr:not(.dept){height:7mm}
-  #content:not(.overview-print) .event .planned-time-input{display:none!important}
-  #content:not(.overview-print) .event .print-planned-time{display:inline!important;font:inherit;color:#292427}
-  #content:not(.overview-print) .event .full{overflow:visible!important}
-  #content:not(.overview-print) .event .dept td{padding:4px 6px!important}
-  #content:not(.overview-print) .event .print-only:last-child{min-width:24mm}
-}
-
-/* Afdruk versie 2: ruimere zijmarges en ingesprongen taken */
-@media print {
- #content:not(.overview-print) .event table tbody tr:not(.dept)>td:nth-child(2) {padding-left:9mm!important;}
- #content:not(.overview-print) .event table tbody tr.dept td {padding-left:4mm!important;}
- #content.overview-print > .full {display:none!important}
- #content.overview-print .paper-overview {display:block!important}
- .paper-overview {font-size:10px}
- .paper-overview .paper-event {margin-bottom:3mm;break-inside:avoid-page!important;page-break-inside:avoid!important;display:block;clear:both}
- .paper-overview .paper-head {background:#401216!important;color:#fff!important;font-size:12px;line-height:1.35;font-weight:bold;padding:8px 9px;break-after:avoid;print-color-adjust:exact;-webkit-print-color-adjust:exact}
- .paper-overview .paper-dept-row td {background:#e9e8e7!important;color:#401216;font-weight:bold;padding:2px 7px!important;border:0!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}
- .paper-overview table {margin:0!important;border-spacing:0!important;table-layout:fixed;width:100%;font-size:9px}
- .paper-overview th {background:#f3eeeb!important;color:#401216!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}
- .paper-overview th,.paper-overview td {padding:2px 6px;border-bottom:1px solid #d9d0cd}
- .paper-overview tr {height:5.1mm;break-inside:avoid-page;page-break-inside:avoid}
- .paper-overview .write-name {min-height:3mm}
- .paper-overview .paper-open {background:#fff3e7!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}
- .paper-overview .paper-check {font-size:12px;text-align:center;color:#401216}
- .paper-overview .paper-meta {font-size:9px;color:#4e4142}
- .paper-overview .paper-event table, .paper-overview .paper-event .paper-head {break-inside:avoid-page;page-break-inside:avoid}
- .paper-overview .paper-dept-row {break-after:avoid-page;page-break-after:avoid;height:auto!important}.paper-overview .paper-shifts {border-collapse:collapse!important;border-spacing:0!important}.paper-overview .paper-shifts tbody tr td {vertical-align:middle}
-}
-.month-arrow{min-width:33px;font-size:20px;line-height:1;padding:5px 9px}.month-quick{font-size:11px;padding:8px}.toolbar label{display:flex;align-items:center;gap:7px}.toolbar #month{min-width:165px}.month-quick.active{background:var(--aub);color:white}@media(max-width:750px){.month-quick{display:none}}
+@media print{@page{size:A4 landscape;margin:7mm}body{background:white;font-size:9px}header,.toolbar,.notice,.controls,.act,.digital-only,.toplink{display:none!important}main{padding:0;margin:0;max-width:none}.event{border:0;border-radius:0;break-before:page;break-inside:auto;margin:0}.event:first-child{break-before:auto}.event-head{padding:7px!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}.info{padding:6px;gap:8px}.info div{min-width:80px}table{font-size:9px}td,th{padding:4px 3px}th,.dept td,.sep td{print-color-adjust:exact;-webkit-print-color-adjust:exact}input,select{border:0!important;background:transparent!important;color:black!important;padding:0!important;appearance:none!important;max-width:100%!important;min-width:0!important;font:inherit!important}.print-only{display:table-cell!important}.event-head,.sep td{background:#401216!important;color:white!important}.dept td{background:#e9e8e7!important}.print-title{display:block;font-size:16px;color:#401216;margin:5px 0 12px}.overview-print .event{break-before:auto}.overview-print table{font-size:8px}.overview-print .sep{break-inside:avoid}}
 </style><style id="pageRule"></style></head><body>
 <header><div><strong>MAURUSHOEVE</strong><small>PERSONEELSPLANNING · ONLINE</small></div><div class="toplink"><a href="index.html">← Dashboard</a><span id="who"></span><button class="secondary" id="logout">Afmelden</button></div></header>
-<main><div id="msg" class="notice">Verbinding met Supabase wordt gecontroleerd…</div><div id="app" hidden><div class="toolbar"><button id="prevMonth" class="secondary month-arrow" title="Vorige maand" aria-label="Vorige maand">‹</button><label>Maand <select id="month"></select></label><button id="nextMonth" class="secondary month-arrow" title="Volgende maand" aria-label="Volgende maand">›</button><button id="prevQuick" class="secondary month-quick">Vorige maand</button><button id="todayMonth" class="secondary month-quick">Deze maand</button><button id="nextQuick" class="secondary month-quick">Volgende maand</button><button id="toggle" class="secondary">Shiftoverzicht</button><button id="print">Afdrukken / PDF</button><button id="refresh" class="secondary">Vernieuwen</button><span id="saveInfo" class="saving"></span></div><div id="content"></div></div></main>
+<main><div id="msg" class="notice">Verbinding met Supabase wordt gecontroleerd…</div><div id="app" hidden><div class="toolbar"><label>Maand <select id="month"></select></label><button id="toggle" class="secondary">Shiftoverzicht</button><button id="print">Afdrukken / PDF</button><button id="refresh" class="secondary">Vernieuwen</button><span id="saveInfo" class="saving"></span></div><div id="content"></div></div></main>
 <script type="module">
 import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 const $=id=>document.getElementById(id), project=localStorage.getItem('mh_project_url'),key=localStorage.getItem('mh_publishable_key');let client,events=[],employees=[],shifts=[],mode='planning',busy=false;
@@ -92,9 +58,9 @@ function costInfo(s){
  const n=Number(e.hourly_cost_eur);if(!Number.isFinite(n))return {label:'Nog in te vullen',kind:'missing'};
  return {label:new Intl.NumberFormat('nl-BE',{style:'currency',currency:'EUR'}).format(n)+'/u',kind:'rate',rate:n};
 }
-function field(s,name,type='time'){let value=type==='time'?clock(s[name]):(s[name]??0);const planned=name==='planned_start'||name==='planned_end';return `<input class="${planned?'planned-time-input':''}" aria-label="${name}" data-id="${s.id}" data-field="${name}" type="${type}" ${type==='number'?'min="0" step="1"':''} value="${safe(value)}">${planned?`<span class="print-planned-time" style="display:none">${safe(value||'—')}</span>`:''}`}
+function field(s,name,type='time'){let value=type==='time'?clock(s[name]):(s[name]??0);return `<input aria-label="${name}" data-id="${s.id}" data-field="${name}" type="${type}" ${type==='number'?'min="0" step="1"':''} value="${safe(value)}">`}
 function row(s,ev,overview=false){const selected=nvt(s);const m=employees.find(x=>x.id===s.employee_id);let str=`<tr class="${selected?'na':''}">`;
-if(overview)str+=`<td>${safe(wd(ev.event_date).slice(0,2))} ${safe(ev.event_date.slice(8,10))}/${safe(ev.event_date.slice(5,7))}</td><td>${safe(ev.customer_name)}</td>`;
+if(overview)str+=`<td>${safe(wd(ev.event_date).slice(0,2))} ${safe(ev.event_date.slice(8,10))}/${safe(ev.event_date.slice(5,7))}</td><td>${safe(eventLabel(ev))}</td>`;
 str+=`<td>${safe(department(s))}</td><td><input class="job-edit" aria-label="Functie" data-id="${s.id}" data-field="job_title" value="${safe(s.job_title)}" title="Functie voor dit feest aanpassen"></td><td class="${!s.employee_id&&!selected?'open':''}">${employeeSelect(s)}</td><td>${field(s,'planned_start')}</td><td>${field(s,'planned_end')}</td>`;
 if(!overview)str+=`<td class="digital-only">${field(s,'actual_start')}</td><td class="digital-only">${field(s,'actual_end')}</td><td class="digital-only">${field(s,'break_minutes','number')}</td>`;
 if(overview)str+=`<td>${safe(selected?'N.v.t.':s.employee_id?contract(s):'OPEN SHIFT')}</td><td>${safe(costInfo(s).label)}</td>`;
@@ -103,27 +69,7 @@ if(!overview)str+=`<td class="digital-only">${shiftHours(s,'planned')}</td><td c
 str+=`<td class="act"><button class="secondary" data-delete="${s.id}" title="Shift verwijderen">Wissen</button></td>`;
 if(!overview)str+='<td class="print-only">__________</td><td class="print-only">__________</td><td class="print-only">______</td><td class="print-only" style="width:13%">______________</td>';
 return str+'</tr>'}
-// Doorlopende maandkeuze: onafhankelijk van de maanden met bestaande feesten.
-// Bij de eerste opening wordt de lokale huidige maand gekozen, daarna onthouden we de selectie bij vernieuwen.
-function currentMonth(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`}
-function shiftMonth(value,delta){const [y,m]=value.split('-').map(Number);const d=new Date(y,m-1+delta,15);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`}
-function monthOptions(){
- const selected=$('month').value||currentMonth();
- const months=events.map(e=>(e.event_date||'').slice(0,7)).filter(x=>/^\d{4}-\d{2}$/.test(x));
- const years=[...months.map(x=>Number(x.slice(0,4))),Number(currentMonth().slice(0,4)),Number(selected.slice(0,4))];
- const first=Math.min(...years)-1,last=Math.max(...years)+1;
- const options=[];
- for(let y=first;y<=last;y++)for(let m=1;m<=12;m++){
-  const val=`${y}-${String(m).padStart(2,'0')}`;
-  const label=new Date(y,m-1,15).toLocaleDateString('nl-BE',{month:'long',year:'numeric'});
-  options.push(`<option value="${val}">${safe(label)}</option>`);
- }
- $('month').innerHTML=options.join('');$('month').value=selected;
- updateMonthShortcuts();
-}
-function updateMonthShortcuts(){const chosen=$('month').value,now=currentMonth();for(const [id,m] of [['prevQuick',shiftMonth(now,-1)],['todayMonth',now],['nextQuick',shiftMonth(now,1)]])$(''+id).classList.toggle('active',chosen===m)}
-function chooseMonth(m){if(!$('month').querySelector(`option[value="${m}"]`)){const option=document.createElement('option');option.value=m;option.textContent=new Date(Number(m.slice(0,4)),Number(m.slice(5))-1,15).toLocaleDateString('nl-BE',{month:'long',year:'numeric'});$('month').add(option)}$('month').value=m;updateMonthShortcuts();render()}
-
+function monthOptions(){const value=$('month').value;const months=[...new Set(events.map(e=>e.event_date.slice(0,7)))].sort();$('month').innerHTML=months.map(m=>`<option value="${m}">${new Date(m+'-15T12:00:00').toLocaleDateString('nl-BE',{month:'long',year:'numeric'})}</option>`).join('');$('month').value=months.includes(value)?value:(months.includes('2026-10')?'2026-10':months.at(-1)||'')}
 // Vaste volgorde: afdeling, functie, vervolgens stabiele aanmaakvolgorde.
 // Persoon, contractstatus en uren wijzigen de positie nooit.
 function shiftSort(a,b){
@@ -135,29 +81,27 @@ function shiftSort(a,b){
  if(ca!==cb)return ca<cb?-1:1;
  return String(a.id).localeCompare(String(b.id));
 }
-function eventShifts(eventId){return shifts.filter(s=>s.event_id===eventId).sort(shiftSort)}
-function paperOverview(evs){
- let out='<div class="paper-overview" style="display:none">';
- for(const ev of evs){
-  const ss=eventShifts(ev.id);let dept='';
-  out+=`<section class="paper-event"><div class="paper-head">${safe(nlDate(ev.event_date))} · ${safe(ev.customer_name)} · ${safe(ev.event_code||'')}</div>`;
-  out+='<table class="paper-shifts"><colgroup><col style="width:32%"><col style="width:32%"><col style="width:18%"><col style="width:9%"><col style="width:9%"></colgroup><tbody>';
-  for(const s of ss){const d=department(s);
-   if(d!==dept){dept=d;out+=`<tr class="paper-dept-row"><td colspan="5">${safe(d)}</td></tr>`;}
-   const employee=employees.find(x=>x.id===s.employee_id);
-   const isOpen=!s.employee_id&&!nvt(s);
-   const name=nvt(s)?'N.v.t.':(employee?.full_name||'');
-   const hours=[clock(s.planned_start),clock(s.planned_end)].filter(Boolean).join(' - ');
-   out+=`<tr><td>${safe(s.job_title)}</td><td class="write-name ${isOpen?'paper-open':''}">${safe(name)}</td><td class="paper-meta">${safe(hours)}</td><td class="paper-check">□</td><td class="paper-check">□</td></tr>`;
-  }
-  out+='</tbody></table></section>';
+// Gebruik de volledige Teamleader-projecttitel, zonder de datum aan het einde.
+// Geen wijzigingen in Supabase: alleen het zichtbare label in planning en afdruk.
+function eventLabel(e){
+ let title=String(e.project_title||'').trim();
+ if(title){
+  // Voorbeelden: "Trouwfeest Selina en David - vrijdag 13/11/2026"
+  // en "Babyborrel - 20-06-2027". Datums midden in een titel blijven staan.
+  title=title.replace(/\s*(?:[-–—|,]\s*)?(?:(?:maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)\s+)?\d{1,2}[\/.-]\d{1,2}[\/.-]\d{4}\s*$/i,'').trim();
+  title=title.replace(/\s*[-–—|,]\s*$/,'').trim();
+  if(title)return title;
  }
- return out+'</div>';
+ const kind=String(e.event_type||'').trim();
+ const customer=String(e.customer_name||'').trim();
+ return [kind&& !/^(feest|event|evenement)$/i.test(kind)?kind:'Feest',customer].filter(Boolean).join(' – ');
 }
-function render(){const evs=events.filter(e=>e.event_date.startsWith($('month').value)).sort((a,b)=>a.event_date.localeCompare(b.event_date));$('content').className=mode==='overview'?'overview-print':'';$('toggle').textContent=mode==='overview'?'Maandplanning':'Shiftoverzicht';$('pageRule').textContent=`@media print{@page{size:A4 ${mode==='overview'?'portrait':'landscape'};margin:${mode==='overview'?'12mm 8mm 10mm':'18mm 13mm 8mm'}}}`;
+
+function eventShifts(eventId){return shifts.filter(s=>s.event_id===eventId).sort(shiftSort)}
+function render(){const evs=events.filter(e=>e.event_date.startsWith($('month').value)).sort((a,b)=>a.event_date.localeCompare(b.event_date));$('content').className=mode==='overview'?'overview-print':'';$('toggle').textContent=mode==='overview'?'Maandplanning':'Shiftoverzicht';$('pageRule').textContent=`@media print{@page{size:A4 ${mode==='overview'?'portrait':'landscape'};margin:7mm}}`;
 if(!evs.length){$('content').innerHTML='<div class="empty">Geen feesten in deze maand.</div>';return}
-if(mode==='overview'){let rows='';for(const e of evs){rows+=`<tr class="sep"><td colspan="11">${safe(nlDate(e.event_date))} · ${safe(e.customer_name)} · ${safe(e.event_code||'')}</td></tr>`;rows+=eventShifts(e.id).map(s=>row(s,e,true)).join('')};$('content').innerHTML=`<h2 class="print-title">Shiftoverzicht · ${safe($('month').selectedOptions[0]?.text)}</h2><div class="full"><table><thead><tr>${['Datum','Feest','Afdeling','Taak','Medewerker','Start','Einde','Via','All-in kost/u','Contract','Actie'].map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>${paperOverview(evs)}`;return}
-$('content').innerHTML=evs.map(e=>{let ss=eventShifts(e.id);let last='',rows='';for(const s of ss){if(department(s)!==last){last=department(s);rows+=`<tr class="dept"><td colspan="17">${safe(last)}</td></tr>`}rows+=row(s,e)}let info=[['Concept',e.concept],['Gasten',e.guest_count_note],['Extra gasten',e.extra_guest_note],['Ceremonie',e.ceremony_note],['LNS',e.late_snack_note],['Timing',(e.start_time||'').slice(0,5)+' – '+(e.end_time||'').slice(0,5)]];return `<section class="event"><div class="event-head"><span>${safe(e.event_type||'Feest')} — ${safe(e.customer_name)}</span><span>${safe(nlDate(e.event_date))} · ${safe(e.event_code||'')}</span></div><div class="info">${info.map(([a,b])=>`<div><b>${a}</b>${safe(b||'—')}</div>`).join('')}</div><div class="full"><table><thead><tr>${['Afdeling','Taak','Medewerker','Start','Einde','Werkelijk start','Werkelijk einde','Pauze (min)','Contract','Gepland (u)','Werkelijk (u)','All-in kost/u','Actie','Werkelijk begin','Werkelijk einde','Pauze','Handtekening'].map((x,i)=>`<th class="${i>=13?'print-only':i>=5&&i<=12?'digital-only':''}">${x}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div><div class="total">${ss.length} shiften</div><div class="controls digital-only"><b>Extra shift:</b><select class="department">${order.map(x=>`<option>${x}</option>`).join('')}</select><input class="job" placeholder="Eigen functie (bv. Barista)" style="max-width:190px"><button data-add="${e.id}">+ Shift toevoegen</button><button class="secondary" data-default="${e.id}">Ontbrekende standaardshiften</button></div></section>`}).join('')}
+if(mode==='overview'){let rows='';for(const e of evs){rows+=`<tr class="sep"><td colspan="11">${safe(nlDate(e.event_date))} · ${safe(eventLabel(e))} · ${safe(e.event_code||'')}</td></tr>`;rows+=eventShifts(e.id).map(s=>row(s,e,true)).join('')};$('content').innerHTML=`<h2 class="print-title">Shiftoverzicht · ${safe($('month').selectedOptions[0]?.text)}</h2><div class="full"><table><thead><tr>${['Datum','Feest','Afdeling','Taak','Medewerker','Start','Einde','Via','All-in kost/u','Contract','Actie'].map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;return}
+$('content').innerHTML=evs.map(e=>{let ss=eventShifts(e.id);let last='',rows='';for(const s of ss){if(department(s)!==last){last=department(s);rows+=`<tr class="dept"><td colspan="17">${safe(last)}</td></tr>`}rows+=row(s,e)}let info=[['Concept',e.concept],['Gasten',e.guest_count_note],['Extra gasten',e.extra_guest_note],['Ceremonie',e.ceremony_note],['LNS',e.late_snack_note],['Timing',(e.start_time||'').slice(0,5)+' – '+(e.end_time||'').slice(0,5)]];return `<section class="event"><div class="event-head"><span>${safe(eventLabel(e))}</span><span>${safe(nlDate(e.event_date))} · ${safe(e.event_code||'')}</span></div><div class="info">${info.map(([a,b])=>`<div><b>${a}</b>${safe(b||'—')}</div>`).join('')}</div><div class="full"><table><thead><tr>${['Afdeling','Taak','Medewerker','Start','Einde','Werkelijk start','Werkelijk einde','Pauze (min)','Contract','Gepland (u)','Werkelijk (u)','All-in kost/u','Actie','Werkelijk begin','Werkelijk einde','Pauze','Handtekening'].map((x,i)=>`<th class="${i>=13?'print-only':i>=5&&i<=12?'digital-only':''}">${x}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div><div class="total">${ss.length} shiften</div><div class="controls digital-only"><b>Extra shift:</b><select class="department">${order.map(x=>`<option>${x}</option>`).join('')}</select><input class="job" placeholder="Eigen functie (bv. Barista)" style="max-width:190px"><button data-add="${e.id}">+ Shift toevoegen</button><button class="secondary" data-default="${e.id}">Ontbrekende standaardshiften</button></div></section>`}).join('')}
 async function reload(){let [ev,em,sh]=await Promise.all([client.from('mh_events').select('*').order('event_date'),client.from('mh_employees').select('*'),client.from('mh_shifts').select('*').order('created_at',{ascending:true}).order('id',{ascending:true})]);for(const item of [ev,em,sh])if(item.error)throw item.error;events=ev.data;employees=em.data;shifts=sh.data;monthOptions();render();$('saveInfo').textContent='Gegevens opgehaald uit Supabase';notice('Online planning geladen. Wijzigingen worden pas bevestigd nadat ze in Supabase opgeslagen zijn.')}
 async function update(id,patch){if(busy)return;busy=true;$('saveInfo').textContent='Opslaan…';try{const {error}=await client.from('mh_shifts').update(patch).eq('id',id);if(error)throw error;await reload();$('saveInfo').textContent='Opgeslagen in Supabase ✓'}catch(e){notice('Wijziging niet opgeslagen: '+e.message,true);$('saveInfo').textContent='FOUT — niet opgeslagen';await reload().catch(()=>{})}finally{busy=false}}
 async function add(eventId,dept,job){if(!job?.trim()){notice('Vul eerst een functie in.',true);return}if(busy)return;busy=true;try{const {error}=await client.from('mh_shifts').insert({event_id:eventId,department:dept,job_title:job.trim()});if(error)throw error;await reload()}catch(e){notice('Shift toevoegen mislukt: '+e.message,true)}finally{busy=false}}
@@ -165,7 +109,7 @@ $('content').addEventListener('change',async e=>{const t=e.target,id=t.dataset.i
 // When a start time changes, also adjust an existing end crossing midnight.
 if(key.endsWith('_start')&&v){const endKey=key.replace('_start','_end'),endClock=clock(s[endKey]);if(endClock){let endDay=ev.event_date;if(endClock<v){const dt=new Date(endDay+'T12:00:00');dt.setDate(dt.getDate()+1);endDay=dt.toLocaleDateString('sv-SE')}patch[endKey]=ts(endDay,endClock)}}}else if(key==='contract_created')patch[key]=t.checked;else if(key==='break_minutes')patch[key]=Math.max(0,Math.round(Number(t.value)||0));await update(id,patch)});
 $('content').addEventListener('click',async e=>{const del=e.target.closest('[data-delete]'),plus=e.target.closest('[data-add]'),def=e.target.closest('[data-default]');if(del){if(!confirm('Deze shift definitief verwijderen uit Supabase?'))return;if(busy)return;busy=true;try{const {error}=await client.from('mh_shifts').delete().eq('id',del.dataset.delete);if(error)throw error;await reload()}catch(err){notice('Wissen mislukt: '+err.message,true)}finally{busy=false}}else if(plus){let root=plus.closest('.controls');await add(plus.dataset.add,root.querySelector('.department').value,root.querySelector('.job').value)}else if(def){let id=def.dataset.default,existing=shifts.filter(s=>s.event_id===id);for(const [dept,roles] of Object.entries(defaultRoles)){const counts={};for(const role of roles){counts[role]=(counts[role]||0)+1;const n=existing.filter(s=>department(s)===dept&&s.job_title.toLowerCase().trim()===role.toLowerCase()).length;if(counts[role]>n){await add(id,dept,role);existing=shifts.filter(s=>s.event_id===id)}}}}});
-$('month').onchange=()=>{updateMonthShortcuts();render()};$('prevMonth').onclick=()=>chooseMonth(shiftMonth($('month').value,-1));$('nextMonth').onclick=()=>chooseMonth(shiftMonth($('month').value,1));$('prevQuick').onclick=()=>chooseMonth(shiftMonth(currentMonth(),-1));$('todayMonth').onclick=()=>chooseMonth(currentMonth());$('nextQuick').onclick=()=>chooseMonth(shiftMonth(currentMonth(),1));$('toggle').onclick=()=>{mode=mode==='planning'?'overview':'planning';render()};$('print').onclick=()=>window.print();$('refresh').onclick=()=>reload().catch(e=>notice(e.message,true));$('logout').onclick=async()=>{await client.auth.signOut();location.href='index.html'};
+$('month').onchange=render;$('toggle').onclick=()=>{mode=mode==='planning'?'overview':'planning';render()};$('print').onclick=()=>window.print();$('refresh').onclick=()=>reload().catch(e=>notice(e.message,true));$('logout').onclick=async()=>{await client.auth.signOut();location.href='index.html'};
 async function boot(){if(!project||!key){notice('Open eerst Maurushoeve Beheer en stel de verbinding in.',true);return}client=createClient(project,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});const {data:{session},error}=await client.auth.getSession();if(error||!session){notice('Je bent niet aangemeld. Ga terug naar het dashboard om in te loggen.',true);return}$('who').textContent=session.user.email;$('app').hidden=false;await reload()}
 boot().catch(e=>notice('Kon planning niet laden: '+e.message,true));
 </script></body></html>
