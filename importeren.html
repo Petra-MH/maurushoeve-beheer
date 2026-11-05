@@ -94,18 +94,23 @@ const dealFields=[
 const invoiceFields=[
  ['year','Jaar *',['jaar','invoiceyear','factuurjaar']],
  ['number','Factuurnummer *',['factuurnummer','factuurnr','factuur','invoicenumber','nummer','documentnummer']],
- ['date','Factuurdatum (optioneel)',['factuurdatum','datum','invoicedate','datumfactuur']],
+ ['date','Datum ingeboekt / factuurdatum *',['datumingeboekt','factuurdatum','datumfactuur','invoicedate']],
+ ['due','Vervaldatum',['vervaldatum','duedate','betaaltermijn']],
  ['customer','Klant',['klant','klantnaam','customer','bedrijf','relatie']],
  ['deal','Dealnummer',['nummervangerelateerdedeal','dealnummer','dealnr','deal']],
  ['project','Projectnummer (indien aanwezig)',['projectnummer','projectnr']],
  ['projecttitle','Projecttitel',['projecttitel']],
  ['dealtitle','Titel van gerelateerde deal',['titelvangerelateerdedeal']],
+ ['entity','Bedrijfsentiteit',['bedrijfsentiteit','entity','facturerendeentiteit']],
+ ['ex','Totaal excl. btw *',['totaalexclbtw','bedragexclbtw','totaalzonderbtw','bedragzonderbtw','subtotal','exclbtw']],
  ['advance','Voorschotfactuur (0/1)',['voorschotfactuur']],
  ['credited','Totaal gecrediteerd excl. btw',['totaalgecrediteerdexclbtw']],
- ['ex','Totaal excl. btw *',['totaalexclbtw','bedragexclbtw','totaalzonderbtw','bedragzonderbtw','subtotal','exclbtw']],
- ['inc','Totaal incl. btw',['totaalinclbtw','bedraginclbtw','totaalmetbtw','inclbtw']],
+ ['paid','Betaald (0/1)',['betaald','ispaid']],
+ ['paidamount','Totaal betaald',['totaalbetaald','paidamount']],
+ ['paiddate','Datum betaald',['datumbetaald','paymentdate']],
+ ['outstanding','Totaal openstaand',['totaalopenstaand','outstandingamount']],
  ['type','Documenttype (optioneel)',['type','documenttype','factuurtype','soort']],
- ['status','Status (optioneel)',['status','factuurstatus','betaalstatus']],
+ ['status','Status (optioneel)',['status','factuurstatus']],
  ['currency','Valuta',['valuta','currency','munt']]
 ];
 let activeImport='projects', otherRows=[],otherHeaders=[],otherPlanned=[],otherBusy=false;
@@ -116,7 +121,7 @@ function otherMap(){let fields=activeImport==='deals'?dealFields:invoiceFields;$
 function otherSwitch(mode){if(otherBusy||busy)return;activeImport=mode;for(const [id,m] of [['tabProjects','projects'],['tabDeals','deals'],['tabInvoices','invoices']])$(id).classList.toggle('selected',m===mode);
 $('app').querySelectorAll(':scope > section').forEach(el=>{if(el.id!=='otherImport')el.classList.toggle('hidden',mode!=='projects')});$('otherImport').classList.toggle('hidden',mode==='projects');if(mode==='projects'){msg('Projecten: bestaande, veilige import.');return}
 $('otherTitle').textContent=mode==='deals'?'Deals importeren':'Uitgaande facturen importeren';$('otherIntro').textContent=mode==='deals'?'Teamleader-deals bijwerken voor de kijkdagfiches. Bestaande kijkdagnotities worden niet aangeraakt.':'Verkoopfacturen, voorschotten, eindfacturen en creditnota’s importeren. Dit zijn géén inkomende aankoopfacturen.';
-$('otherHint').textContent=mode==='deals'?'Gebruik bij voorkeur de volledige Teamleader-dealexport met kolom Nummer.':'Kies Jaar, Factuurnummer en Totaal excl. btw. Deze export bevat geen factuurdatum of documenttype. Dubbele jaar+factuurnummers worden uit veiligheid volledig overgeslagen.';
+$('otherHint').textContent=mode==='deals'?'Gebruik bij voorkeur de volledige Teamleader-dealexport met kolom Nummer.':'Kies Jaar, Factuurnummer en Totaal excl. btw. Datum ingeboekt is de factuurdatum. Selecteer ook Vervaldatum, Betaald, Totaal betaald, Datum betaald en Totaal openstaand. Dubbele jaar+factuurnummers worden uit veiligheid volledig overgeslagen.';
 $('otherFile').value='';$('otherMapping').classList.add('hidden');$('otherResults').classList.add('hidden');otherRows=[];otherPlanned=[];msg('Kies een exportbestand. Er wordt nog niets opgeslagen.')}
 $('tabProjects').onclick=()=>otherSwitch('projects');$('tabDeals').onclick=()=>otherSwitch('deals');$('tabInvoices').onclick=()=>otherSwitch('invoices');
 $('otherFile').onchange=async()=>{const file=$('otherFile').files[0];if(!file)return;try{let data;if(/\.csv$/i.test(file.name)){const buf=await file.arrayBuffer();let txt=new TextDecoder('utf-8').decode(buf);if(txt.includes('�'))txt=new TextDecoder('windows-1252').decode(buf);data=csv(txt.replace(/^\uFEFF/,''))}else{if(!window.XLSX)throw Error('Excel-lezer niet beschikbaar. Probeer CSV.');const w=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true});data=XLSX.utils.sheet_to_json(w.Sheets[w.SheetNames[0]],{header:1,defval:'',raw:true})}const first=data.findIndex(r=>r.filter(c=>otherText(c)).length>=2);if(first<0)throw Error('Geen kolomtitels gevonden.');otherHeaders=data[first].map((x,i)=>otherText(x)||'Kolom '+(i+1));otherRows=data.slice(first+1).filter(r=>r.some(otherText)).map(r=>Object.fromEntries(otherHeaders.map((h,i)=>[h,r[i]??''])));if(otherRows.length>15000)throw Error('Exporteer maximaal 15.000 regels per bestand.');otherMap();msg(otherRows.length+' regels gelezen. Controleer nu de kolommen.')}catch(e){msg(e.message,true)}};
@@ -127,19 +132,21 @@ for(const [from,to] of Object.entries(entries)){if(!$('other_'+from).value)conti
 function invoicePayload(v){
  const nr=otherText(v.number),year=Number(otherText(v.year)),amount=otherNumber(v.ex),credited=otherNumber(v.credited),type=otherText(v.type),date=isoDate(v.date);
  const creditByType=/credit|creditnota|creditnote|cn\b/i.test(type)||/^(cn|credit)/i.test(nr);
- // Gecrediteerd bedrag wordt apart bewaard: een credit kan ook als aparte negatieve factuur in de export staan.
- // Daarom niet blind aftrekken van het totale bedrag; de boekhoudkundige afstemming gebeurt later.
+ // Een totaal gecrediteerd bedrag is GEEN zelfstandig geïmporteerde creditnota.
+ // Bewaar bruto en creditering apart; bereken definitieve netto-omzet pas na afstemming.
  const signed=amount===null?null:(creditByType?-Math.abs(amount):amount);
+ const flag=x=>otherText(x)===''?null: ['1','true','ja','yes','waar'].includes(otherText(x).toLowerCase());
  return {invoice_year:Number.isInteger(year)&&year>=2000&&year<=2100?year:null,invoice_number:nr,
- invoice_date:date||null,customer_name:otherText(v.customer)||null,teamleader_dealnr:otherText(v.deal)||null,
+ invoice_date:date||null,due_date:isoDate(v.due)||null,customer_name:otherText(v.customer)||null,teamleader_dealnr:otherText(v.deal)||null,
  teamleader_projectnr:otherText(v.project)||null,project_title:otherText(v.projecttitle)||null,
- related_deal_title:otherText(v.dealtitle)||null,advance_invoice:otherText(v.advance)===''?null:(otherNumber(v.advance)===1),
- credited_amount_ex_vat:credited,document_type:type||null,status:otherText(v.status)||null,
- amount_ex_vat:amount,signed_amount_ex_vat:signed,amount_incl_vat:otherNumber(v.inc),currency:otherText(v.currency)||'EUR',
+ related_deal_title:otherText(v.dealtitle)||null,business_entity:otherText(v.entity)||null,
+ advance_invoice:flag(v.advance),credited_amount_ex_vat:credited,document_type:type||null,status:otherText(v.status)||null,
+ is_paid:flag(v.paid),payment_date:isoDate(v.paiddate)||null,amount_paid:otherNumber(v.paidamount),amount_outstanding:otherNumber(v.outstanding),
+ amount_ex_vat:amount,signed_amount_ex_vat:signed,amount_incl_vat:null,currency:otherText(v.currency)||'EUR',
  source_row:v,updated_at:new Date().toISOString()};
 }
 $('otherPreview').onclick=async()=>{if(otherBusy)return;otherBusy=true;$('otherPreview').disabled=true;try{
- const required=activeImport==='deals'?['deal']:['year','number','ex'];
+ const required=activeImport==='deals'?['deal']:['year','number','date','ex'];
  if(required.some(k=>!$('other_'+k).value))throw Error('Koppel eerst de verplichte kolommen (*).');
  let data;
  if(activeImport==='deals')data=await otherAll('mh_deals','id,teamleader_dealnr,title,customer_name,event_date,phase');
@@ -149,7 +156,7 @@ $('otherPreview').onclick=async()=>{if(otherBusy)return;otherBusy=true;$('otherP
  const key=activeImport==='deals'?nr:String(p.invoice_year)+'::'+nr;return {nr,key,p,old:existing.get(key)};});
  const freq=new Map();for(const x of draft)freq.set(x.key,(freq.get(x.key)||0)+1);
  otherPlanned=draft.map(x=>{let kind='new',reason='';if(!x.nr){kind='skip';reason='Nummer ontbreekt'}
- else if(activeImport==='invoices'&&(!x.p.invoice_year||x.p.amount_ex_vat===null)){kind='skip';reason='Jaar of bedrag ontbreekt/ongeldig'}
+ else if(activeImport==='invoices'&&(!x.p.invoice_year||!x.p.invoice_date||x.p.amount_ex_vat===null)){kind='skip';reason='Jaar, factuurdatum of bedrag ontbreekt/ongeldig'}
  else if(freq.get(x.key)>1){kind='skip';reason='Dubbel jaar + factuurnummer in export; controleer apart'}
  else if(x.old){kind='update';reason='Bestaand record; exportvelden bijwerken'}
  return {...x,kind,reason}});
@@ -157,7 +164,7 @@ $('otherPreview').onclick=async()=>{if(otherBusy)return;otherBusy=true;$('otherP
  $('otherCounts').textContent=`${counts.new} nieuw · ${counts.update} bestaande records · ${counts.skip} overgeslagen`;
  $('otherDiff').innerHTML=`<table><thead><tr><th>Actie</th><th>Nummer</th><th>Omschrijving / klant</th><th>Datum / jaar</th><th>Opmerking</th></tr></thead><tbody>${otherPlanned.slice(0,300).map(x=>`<tr><td><span class="tag ${x.kind}">${{new:'Nieuw',update:'Bijwerken',skip:'Overslaan'}[x.kind]}</span></td><td>${safe(activeImport==='invoices'?x.key.replace('::',' / '):x.nr)}</td><td>${safe(x.p.title||x.p.customer_name||'—')}</td><td>${safe(x.p.event_date||x.p.invoice_date||x.p.invoice_year||'—')}</td><td>${safe(x.reason)}</td></tr>`).join('')}</tbody></table>${otherPlanned.length>300?`<p class="hint">De eerste 300 van ${otherPlanned.length} regels zijn getoond; alle geldige regels worden bij bevestiging verwerkt.</p>`:''}`;
  $('otherResults').classList.remove('hidden');$('otherOutcome').textContent='';$('otherCommit').disabled=!(counts.new+counts.update);
- msg(activeImport==='invoices'?`Controle klaar. ${counts.skip} twijfelgevallen worden NIET geïmporteerd. Factuurdatum ontbreekt in de bron: geen datum verzonnen. Crediteringen apart opgeslagen; netto-omzet nog niet definitief.`:'Controle klaar. Er is nog niets opgeslagen.');
+ msg(activeImport==='invoices'?`Controle klaar. ${counts.skip} twijfelgevallen worden NIET geïmporteerd. Factuurdatum, vervaldatum en betalingen worden apart opgeslagen. Crediteringen apart; netto-omzet nog niet definitief.`:'Controle klaar. Er is nog niets opgeslagen.');
  }catch(e){msg('Controle mislukt: '+e.message,true)}finally{otherBusy=false;$('otherPreview').disabled=false}};
 $('otherCommit').onclick=async()=>{if(otherBusy)return;const valid=otherPlanned.filter(x=>x.kind!=='skip');if(!confirm(`${valid.length} ${activeImport==='deals'?'deals':'verkoopfacturen'} toevoegen of bijwerken? Er worden geen bestaande gegevens verwijderd.`))return;otherBusy=true;$('otherCommit').disabled=true;let ok=0,errs=[];try{
 const table=activeImport==='deals'?'mh_deals':'mh_sales_invoices';for(let i=0;i<valid.length;i++){const x=valid[i],q=x.old?client.from(table).update(x.p).eq('id',x.old.id):client.from(table).insert(x.p);const {error}=await q;if(error){errs.push(`${x.nr}: ${error.message}`);if(errs.length>=5)break}else ok++;if(i%100===0)$('otherOutcome').textContent=`${ok} van ${valid.length} verwerkt…`}
