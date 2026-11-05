@@ -37,16 +37,37 @@ function getSkip(x){
  if(!x.customer)return 'Klantnaam ontbreekt';
  return '';
 }
+// Jaarstatistieken: alle echte projecten, ook met status Klaar, los van de planning.
+function catalogEligible(x){
+ if(!x.nr||!x.date||!x.customer)return false;
+ if(excludeSet.has(x.nr)||manualExclusions.has(x.nr))return false;
+ if(!['eventlocatiemaurushoeve','cateringbongoesta'].includes(name(x.dept)))return false;
+ if(!['actief','klaar','geannuleerd','annuleerd','cancelled','canceled'].includes(name(x.status)))return false;
+ if(/project\s*template|projecttemplate/i.test(x.title))return false;
+ if(['flow per werknemer','niels coppenholle'].includes(x.title.toLowerCase()))return false;
+ if(/^(meeting weddingplanners|salesmeeting 2024|marketingmeeting 2024|2023\s*[-–]\s*(teammeeting|hr meeting|businessmeetings))/i.test(x.title))return false;
+ return true;
+}
+async function saveCatalog(){
+ const entries=planned.filter(catalogEligible).map(x=>({project_number:x.nr,event_date:x.date,project_title:x.title,customer_name:x.customer,department:x.dept,project_status:x.status,updated_at:new Date().toISOString()}));
+ let success=0;
+ for(let start=0;start<entries.length;start+=150){
+   const {error}=await client.from('mh_event_catalog').upsert(entries.slice(start,start+150),{onConflict:'project_number'});
+   if(error)throw Error('Eventstatistieken konden niet worden bijgewerkt: '+error.message);
+   success+=Math.min(150,entries.length-start);
+ }
+ return success;
+}
 async function getAllEvents(){let all=[];for(let from=0;from<20000;from+=800){const {data,error}=await client.from('mh_events').select('id,teamleader_projectnr,event_date,customer_name,project_title,planning_initialized').range(from,from+799);if(error)throw error;all.push(...data);if(data.length<800)break}return all}
 async function loadExclusions(){let all=[];const {data,error}=await client.from('mh_project_import_exclusions').select('teamleader_projectnr');if(error)throw new Error('Uitsluitingen konden niet gelezen worden: '+error.message);all=data||[];excludeSet=new Set(all.map(x=>String(x.teamleader_projectnr).trim()));}
 function countAndRender(){let c={new:0,update:0,same:0,skip:0};planned.forEach(x=>c[x.kind]++);$('counts').textContent=`${c.new} nieuw · ${c.update} gewijzigd · ${c.same} ongewijzigd · ${c.skip} overgeslagen`;
  $('diff').innerHTML=`<table><thead><tr><th>Resultaat</th><th>Projectnr</th><th>Project / klant</th><th>Feestdatum</th><th>Opmerking</th><th>Uitsluiten</th></tr></thead><tbody>${planned.map(x=>`<tr><td><span class="tag ${x.kind}">${{new:'Nieuw',update:'Bijwerken',same:'Ongewijzigd',skip:'Overslaan'}[x.kind]}</span></td><td>${safe(x.nr)}</td><td>${safe(x.title||x.customer)}${x.title&&x.customer!==x.title?`<div class="hint">${safe(x.customer)}</div>`:''}</td><td>${safe(x.date||'—')}</td><td>${safe(x.reason)}${x.kind==='update'?` (was ${safe(x.old.event_date)}, ${safe(x.old.customer_name)})`:''}</td><td>${x.nr?`<input type="checkbox" aria-label="Project ${safe(x.nr)} uitsluiten" data-exclude="${safe(x.nr)}" ${excludeSet.has(x.nr)||manualExclusions.has(x.nr)?'checked':''} ${excludeSet.has(x.nr)?'disabled title="Eerder uitgesloten in Supabase"':''}>`:''}</td></tr>`).join('')}</tbody></table>`;
- $('commit').disabled=c.new+c.update+c.same===0 && manualExclusions.size===0;
+ $('commit').disabled=c.new+c.update+c.same===0 && manualExclusions.size===0 && !planned.some(catalogEligible);
 }
 $('diff').addEventListener('change',e=>{if(!e.target.matches('[data-exclude]'))return;let nr=e.target.getAttribute('data-exclude');if(e.target.checked)manualExclusions.add(nr);else manualExclusions.delete(nr);for(const x of planned){if(x.nr!==nr)continue;x.reason=getSkip(x);if(x.reason)x.kind='skip';else if(!x.old)x.kind='new';else{x.kind=x.old.event_date!==x.date||x.old.customer_name!==x.customer||(x.title&&x.old.project_title!==x.title)?'update':'same';x.reason=x.kind==='update'?'Datum, klant of titel verschilt':'Geen wijzigingen'}}countAndRender()});
-$('preview').onclick=async()=>{try{if(busy)return;busy=true;$('preview').disabled=true;let m=Object.fromEntries(wanted.map(([k])=>[k,$('map_'+k).value]));if(wanted.some(([k])=>k!=='dealnr'&&!m[k]))throw Error('Koppel projectnummer, einddatum, klant, naam, afdeling en status. Dealnummer is optioneel.');const [data]=await Promise.all([getAllEvents(),loadExclusions()]);let existing=new Map(data.filter(x=>x.teamleader_projectnr).map(x=>[String(x.teamleader_projectnr).trim(),x]));let seen=new Set();planned=rows.map((r,i)=>{let nr=String(r[m.projectnr]??'').trim(),date=isoDate(r[m.date]),title=String(r[m.title]??'').trim(),customer=String(r[m.customer]??'').trim(),dept=String(r[m.department]??'').trim(),status=String(r[m.status]??'').trim(),old=existing.get(nr),x={nr,date,title,customer,dealnr:m.dealnr?String(r[m.dealnr]??'').trim():'',dept,status,old,index:i+1,kind:'new',reason:''};x.reason=getSkip(x);if(x.reason)x.kind='skip';else if(seen.has(nr)){x.kind='skip';x.reason='Dubbel projectnummer in export'}else if(old){x.kind=old.event_date!==date||old.customer_name!==customer||(title&&old.project_title!==title)?'update':'same';x.reason=x.kind==='update'?'Datum, klant of projecttitel verschilt':'Geen wijzigingen';}seen.add(nr);return x});countAndRender();$('results').classList.remove('hidden');$('outcome').textContent='';msg('Controleoverzicht klaar. Nog niets opgeslagen.')}catch(e){msg('Vergelijken mislukt: '+e.message,true)}finally{busy=false;$('preview').disabled=false}};
+$('preview').onclick=async()=>{try{if(busy)return;busy=true;$('preview').disabled=true;let m=Object.fromEntries(wanted.map(([k])=>[k,$('map_'+k).value]));if(wanted.some(([k])=>k!=='dealnr'&&!m[k]))throw Error('Koppel projectnummer, einddatum, klant, naam, afdeling en status. Dealnummer is optioneel.');const [data]=await Promise.all([getAllEvents(),loadExclusions()]);let existing=new Map(data.filter(x=>x.teamleader_projectnr).map(x=>[String(x.teamleader_projectnr).trim(),x]));let seen=new Set();planned=rows.map((r,i)=>{let nr=String(r[m.projectnr]??'').trim(),date=isoDate(r[m.date]),title=String(r[m.title]??'').trim(),customer=String(r[m.customer]??'').trim(),dept=String(r[m.department]??'').trim(),status=String(r[m.status]??'').trim(),old=existing.get(nr),x={nr,date,title,customer,dealnr:m.dealnr?String(r[m.dealnr]??'').trim():'',dept,status,old,index:i+1,kind:'new',reason:''};x.reason=getSkip(x);if(x.reason)x.kind='skip';else if(seen.has(nr)){x.kind='skip';x.reason='Dubbel projectnummer in export'}else if(old){x.kind=old.event_date!==date||old.customer_name!==customer||(title&&old.project_title!==title)?'update':'same';x.reason=x.kind==='update'?'Datum, klant of projecttitel verschilt':'Geen wijzigingen';}seen.add(nr);return x});countAndRender();$('results').classList.remove('hidden');$('outcome').textContent='';msg('Controleoverzicht klaar. Nog niets opgeslagen. Bij bevestigen worden ook de echte eventjaartotalen bijgewerkt: '+planned.filter(catalogEligible).length+' projecten (inclusief Klaar, zonder extra shiften).')}catch(e){msg('Vergelijken mislukt: '+e.message,true)}finally{busy=false;$('preview').disabled=false}};
 $('commit').onclick=async()=>{if(busy)return;const chosen=planned.filter(x=>['new','update','same'].includes(x.kind));const newly=chosen.filter(x=>x.kind==='new').length,updates=chosen.filter(x=>x.kind==='update'&&$('allowUpdate').checked).length;
- if(!confirm(`${newly} nieuwe projecten, ${updates} updates; ontbrekende standaardplanningen worden eenmalig aangemaakt. ${manualExclusions.size} extra uitsluitingen bewaren. Bevestigen?`))return;
+ if(!confirm(`${newly} nieuwe projecten, ${updates} updates; ontbrekende standaardplanningen worden eenmalig aangemaakt. ${planned.filter(catalogEligible).length} projecten worden ook voor jaartotalen bijgewerkt. ${manualExclusions.size} extra uitsluitingen bewaren. Bevestigen?`))return;
  busy=true;$('commit').disabled=true;$('preview').disabled=true;let ok=0,sh=0,errs=[];try{
   for(const nr of manualExclusions){const {error}=await client.from('mh_project_import_exclusions').upsert({teamleader_projectnr:nr,reason:'Handmatig uitgesloten bij projectimport'},{onConflict:'teamleader_projectnr'});if(error)errs.push(`Uitsluiting ${nr}: ${error.message}`)}
   if(errs.length)throw Error('Uitsluitingen zijn niet allemaal opgeslagen; import gestopt. '+errs.join('; '));
@@ -59,7 +80,8 @@ $('commit').onclick=async()=>{if(busy)return;const chosen=planned.filter(x=>['ne
   const {data:added,error:se}=await client.rpc('mh_ensure_default_planning',{p_event_id:id});if(se)throw new Error('Project verwerkt; planning controleren: '+se.message);
   sh+=Number(added||0);ok++;
  }catch(e){errs.push(`${x.nr}: ${e.message}`)}}
- $('outcome').textContent=`${ok} relevante projecten gecontroleerd, ${sh} standaardshiften aangemaakt. ${planned.filter(x=>x.kind==='skip').length} overgeslagen.`+(errs.length?` Fouten (${errs.length}): ${errs.join(' | ')}`:'');msg(errs.length?'Import gedeeltelijk gelukt. Bekijk de fouten hieronder.':'Import afgerond. Bestaande planningen zijn behouden.',!!errs.length);
+  let catalogSaved=0;try{catalogSaved=await saveCatalog()}catch(e){errs.push(e.message)}
+  $('outcome').textContent=`${ok} relevante projecten gecontroleerd, ${sh} standaardshiften aangemaakt; ${catalogSaved} events in de jaartelling bijgewerkt. ${planned.filter(x=>x.kind==='skip').length} overgeslagen voor personeelsplanning.`+(errs.length?` Fouten (${errs.length}): ${errs.join(' | ')}`:'');msg(errs.length?'Import gedeeltelijk gelukt. Bekijk de fouten hieronder.':'Import afgerond. Bestaande planningen zijn behouden.',!!errs.length);
  }catch(e){msg(e.message,true)}finally{busy=false;$('preview').disabled=false;$('commit').disabled=true}
 };
 

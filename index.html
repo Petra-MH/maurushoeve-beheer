@@ -46,26 +46,26 @@ function connect(url,key){
   return client;
 }
 async function renderSession(session){if(!session?.user){show('auth');return}show('dashboard');$('who').textContent=session.user.email||'';$('logout').classList.remove('hidden');await loadCounts()}
-async function loadCounts(){if(!client)return;clearStatus();const names=[['mh_events','countEvents'],['mh_employees','countEmployees'],['mh_shifts','countShifts']];try{for(const [table,id] of names){const {count,error}=await client.from(table).select('id',{count:'exact',head:true});if(error)throw error;$(id).textContent=count??'0'}// De aantallen zijn dynamisch per kalenderjaar. Historische projecten die nooit in
-// mh_events werden ingevoerd tellen nog NIET mee: toon daarom "in beheer".
-const now=new Date(), currentYear=now.getFullYear(), today=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');
-const years=[currentYear-1,currentYear,currentYear+1];
+async function loadCounts(){if(!client)return;clearStatus();const names=[['mh_events','countEvents'],['mh_employees','countEmployees'],['mh_shifts','countShifts']];try{for(const [table,id] of names){const {count,error}=await client.from(table).select('id',{count:'exact',head:true});if(error)throw error;$(id).textContent=count??'0'}// Drie subtiele jaren. In 2027 blijft 2026 zichtbaar; vanaf 2028 schuift dit mee.
+// De catalogus bevat ook afgewerkte projecten, zonder extra planningsshiften.
+const dayParts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Brussels',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+const part=k=>dayParts.find(x=>x.type===k).value;
+const currentYear=Number(part('year')),today=`${part('year')}-${part('month')}-${part('day')}`;
+const firstYear=Math.max(2026,currentYear-1);
+const years=[firstYear,firstYear+1,firstYear+2];
 const yearCounts=await Promise.all(years.map(async year=>{
-  const {count,error}=await client.from('mh_events').select('id',{count:'exact',head:true}).gte('event_date',year+'-01-01').lt('event_date',(year+1)+'-01-01');
-  if(error)throw error;
-  let upcoming=0;
-  if(year===currentYear){
-    for(let offset=0;offset<100000;offset+=900){
-      const {data,error}=await client.from('mh_events').select('id,status').gte('event_date',today).lt('event_date',(year+1)+'-01-01').range(offset,offset+899);
-      if(error)throw error;
-      upcoming+=(data||[]).filter(e=>!/(annul|cancel|geannuleerd)/i.test(String(e.status||''))).length;
-      if(!data||data.length<900)break;
-    }
-  }
-  return {year,count:count??0,upcoming};
+ const q=client.from('mh_event_catalog').select('project_number,event_date,project_status').gte('event_date',`${year}-01-01`).lt('event_date',`${year+1}-01-01`);
+ let records=[];
+ for(let start=0;start<100000;start+=800){
+   const {data,error}=await client.from('mh_event_catalog').select('project_number,event_date,project_status').gte('event_date',`${year}-01-01`).lt('event_date',`${year+1}-01-01`).range(start,start+799);
+   if(error)throw error;
+   records.push(...(data||[]));if(!data||data.length<800)break;
+ }
+ const valid=records.filter(e=>!/annul|cancel/i.test(String(e.project_status||'')));
+ return {year,total:valid.length,upcoming:valid.filter(e=>e.event_date>=today).length};
 }));
-$('eventYearCounts').innerHTML=yearCounts.map(x=>`<span>${x.year}: <b>${x.year===currentYear?`${x.upcoming} van ${x.count}`:x.count}</b>${x.year===currentYear?' nog komend':''}</span>`).join('');
-$('eventYearCounts').title='Aantallen op basis van de geregistreerde events in Supabase. Afgewerkte historische projecten die niet zijn geïmporteerd ontbreken nog in de jaartotalen.';
+$('eventYearCounts').innerHTML=yearCounts.map(x=>`<span>${x.year}: <b>${x.year===currentYear?`${x.upcoming} (${x.total})`:x.total}</b></span>`).join('');
+$('eventYearCounts').title='Huidig jaar: resterende events (totaal). Jaartotalen uit alle relevante Teamleader-projecten, inclusief afgewerkte events.';
 // Medewerkersstatus uit het bestaande medewerkersbeheer.
 let activeEmployeeCount=0;
 const activeResult=await client.from('mh_employees').select('id',{count:'exact',head:true}).eq('employee_status','actief');
