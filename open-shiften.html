@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="nl-BE"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Maurushoeve | Open shiften</title>
+<style>:root{--aub:#401216;--wine:#663137;--line:#ded8d5;--ink:#30292b}*{box-sizing:border-box}body{margin:0;background:#f7f6f5;color:var(--ink);font:14px/1.5 Montserrat,Arial,sans-serif}header{background:var(--aub);color:white;padding:21px 22px}header strong{font-size:20px;letter-spacing:1.5px}header span{display:block;font-size:11px;letter-spacing:.9px;color:#e2cccc}main{max-width:650px;margin:26px auto;padding:0 18px}.intro{color:#695e60;font-size:13px}.month{margin:20px 0;background:white;border:1px solid var(--line);border-radius:10px;overflow:hidden}.month h2{font-size:16px;padding:12px 16px;margin:0;color:var(--wine);background:#f4eeec}.shift{padding:12px 16px;border-top:1px solid #eee7e5;display:flex;gap:12px;justify-content:space-between;align-items:center}.shift span{font-size:13px}.shift strong{font-size:14px;white-space:nowrap}.shift em{font-size:12px;font-style:normal;color:var(--wine);margin-left:5px}.message{background:white;border:1px solid var(--line);border-radius:10px;padding:18px;margin:16px 0}.actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap}button{background:var(--aub);color:white;border:0;border-radius:5px;padding:9px 13px;cursor:pointer;font:inherit}small{color:#786e70}footer{font-size:11px;color:#7d7374;margin:20px 0}@media(max-width:450px){.shift{display:block}.shift strong{display:block;margin-top:2px}}</style></head>
+<body><header><strong>MAURUSHOEVE</strong><span>OPEN SHIFTEN · ACTUEEL OVERZICHT</span></header><main><h1 style="font-size:23px;margin-bottom:4px">Open shiften</h1><p class="intro">Dit overzicht wordt rechtstreeks uit onze planning bijgewerkt. Alleen shiften met volledige uren worden getoond. Zodra een shift ingevuld of een event afgewerkt is, verdwijnt die automatisch uit de lijst.</p><div class="actions"><button id="reload">Vernieuwen</button><small id="stamp"></small></div><div id="status" class="message">Open shiften laden…</div><div id="list"></div><footer>Enkel datum, uren en afwasvermelding zijn openbaar. Reageer op de shift via de personeelsgroep.</footer></main>
+<script type="module">
+import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const status=document.getElementById('status'),list=document.getElementById('list'),stamp=document.getElementById('stamp');
+const now=()=>new Date().toLocaleTimeString('nl-BE',{hour:'2-digit',minute:'2-digit'});
+const months=['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
+const weekdays=['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
+function dayName(date){const [y,m,d]=date.split('-').map(Number);return weekdays[new Date(Date.UTC(y,m-1,d)).getUTCDay()]}
+function clock(ts){return new Intl.DateTimeFormat('nl-BE',{timeZone:'Europe/Brussels',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(ts)).replace(':','u')}
+function el(tag,txt,cls){const n=document.createElement(tag);if(txt!==undefined)n.textContent=txt;if(cls)n.className=cls;return n}
+const args=new URLSearchParams(location.hash.slice(1)),url=args.get('url'),key=args.get('key');
+let client;
+try{if(!url||!key||!/^https:\/\/[a-z0-9.-]+\.supabase\.co$/i.test(url))throw Error('Deze link is onvolledig. Vraag de beheerder om de vaste link opnieuw te delen.');client=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}})}catch(e){status.textContent=e.message}
+async function load(){if(!client)return;status.hidden=false;status.textContent='Open shiften laden…';list.replaceChildren();try{
+ const {data,error}=await client.from('mh_public_open_shifts').select('event_date,planned_start,planned_end,is_dishwashing').order('event_date',{ascending:true}).order('planned_start',{ascending:true});
+ if(error)throw error;
+ const groups=new Map();for(const sh of data||[]){const m=sh.event_date.slice(0,7);if(!groups.has(m))groups.set(m,[]);groups.get(m).push(sh)}
+ status.hidden=!!groups.size;if(!groups.size)status.textContent='Momenteel zijn er geen open shiften met volledig ingevulde uren.';
+ for(const [m,shifts] of groups){const section=el('section',undefined,'month'),h=el('h2',months[Number(m.slice(5,7))-1][0].toUpperCase()+months[Number(m.slice(5,7))-1].slice(1)+' '+m.slice(0,4));section.append(h);
+  for(const sh of shifts){const row=el('div',undefined,'shift'),d=el('span',dayName(sh.event_date)+' '+sh.event_date.slice(8,10)+'/'+sh.event_date.slice(5,7)),t=el('strong','van '+clock(sh.planned_start)+' tot '+clock(sh.planned_end));if(sh.is_dishwashing)t.append(el('em','(afwas)'));row.append(d,t);section.append(row)}list.append(section)}stamp.textContent='Laatst opgehaald: '+now();
+ }catch(e){status.hidden=false;status.textContent='Kon de shiften niet laden: '+e.message+' Controleer of de SQL voor het openbare overzicht is uitgevoerd.'}}
+document.getElementById('reload').onclick=load;await load();
+</script></body></html>

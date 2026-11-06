@@ -37,9 +37,31 @@
 @media(max-width:700px){.run-fields{grid-template-columns:1fr}.run-lines li{grid-template-columns:94px minmax(0,1fr)}}
 @media print{.event-extra,.event-fin,.archive-tools,.archive-filter,.event-top-tools,.wa-panel,.total{display:none!important}.status-flag{display:none!important}.run-sheet{display:block!important;border:0;border-top:1px solid #ded5d0;border-radius:0;background:#fff;margin:0 7px 8px;padding:7px 2px 2px;break-inside:avoid}.run-sheet h3{font-size:11px;margin-bottom:4px}.run-lines{row-gap:0}.run-lines li{grid-template-columns:95px minmax(0,1fr);padding:1px 0;font-size:9px;line-height:1.2}.run-guests{font-size:9px!important;gap:9px!important;margin-bottom:4px!important}}
 
+
+/* V6: draaiboek en briefing uitsluitend achter de eventgegevens en onderaan de afdruk. */
+.briefing-editor{min-height:125px}
+.event-print-bottom{display:none}
+@media print{
+  .event-print-bottom{display:grid!important;grid-template-columns:42% minmax(0,1fr);gap:9px;margin:10px 8px 3px;align-items:stretch;break-inside:avoid;page-break-inside:avoid}
+  .event-print-bottom .print-box{border:1px solid #cdbfba;border-radius:4px;padding:8px 10px;min-height:110px;background:white;break-inside:avoid;overflow-wrap:anywhere}
+  .event-print-bottom h3{margin:0 0 6px;padding-bottom:4px;border-bottom:1px solid #e5deda;color:#401216;font-size:10px;letter-spacing:.1px}
+  .event-print-bottom .run-lines{margin:0;padding:0;list-style:none}
+  .event-print-bottom .run-lines li{display:grid;grid-template-columns:78px minmax(0,1fr);gap:5px;line-height:1.25;padding:2px 0;font-size:8.5px}
+  .event-print-bottom .run-time{font-weight:700;color:#401216}
+  .event-print-bottom .run-guests{display:block;font-size:8.5px;margin:0 0 6px}
+  .event-print-bottom .run-guests span{display:block;white-space:normal;margin:1px 0}
+  .event-print-bottom .briefing-text{white-space:pre-wrap;font-size:9px;line-height:1.45;min-height:70px}
+  .event-print-bottom .print-muted{font-size:8px;color:#777}
+  .overview-print .event-print-bottom{display:none!important}
+}
+/* Geschatte uurkosten van open shiften: lichtgrijs, maar wel meegeteld in de planning. */
+.estimated-rate{color:#a29a98;font-weight:400;font-style:italic;white-space:nowrap}
+.estimate-note{color:#938a88;font-size:11px}
+.fin-pair .est-amount{color:#877f7c;font-weight:500}
+@media print{.estimated-rate,.estimate-note{display:none!important}}
 </style><style id="pageRule"></style></head><body>
 <header><div><strong>MAURUSHOEVE</strong><small>PERSONEELSPLANNING · ONLINE</small></div><div class="toplink"><a href="index.html">← Dashboard</a><span id="who"></span><button class="secondary" id="logout">Afmelden</button></div></header>
-<main><div id="msg" class="notice">Verbinding met Supabase wordt gecontroleerd…</div><div id="app" hidden><div class="toolbar"><label>Maand <select id="month"></select></label><button id="toggle" class="secondary">Shiftoverzicht</button><button id="print">Afdrukken / PDF</button><button id="refresh" class="secondary">Vernieuwen</button><button id="waToggle" class="secondary digital-only">WhatsApp · open shiften</button><label class="archive-filter digital-only"><input type="checkbox" id="showDone"> Ook afgewerkte events tonen</label><span id="saveInfo" class="saving"></span></div><section id="waPanel" class="wa-panel digital-only" hidden><h3>WhatsApp-bericht voor open shiften</h3><p>Alleen toekomstige, niet-afgewerkte events en open shiften worden meegenomen. Bewerk de tekst gerust voor je ze kopieert.</p><div class="wa-toolbar"><label>Vanaf <select id="waStart"></select></label><label>Maanden <select id="waMonths"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option><option value="6">6</option><option value="12">12</option></select></label><button id="waGenerate" class="secondary">Bericht opstellen</button></div><textarea id="waText" aria-label="WhatsApp-bericht bewerken" spellcheck="true"></textarea><div class="wa-footer"><button id="waCopy">Kopieer bericht</button><span id="waInfo" class="muted"></span></div></section><div id="content"></div></div></main>
+<main><div id="msg" class="notice">Verbinding met Supabase wordt gecontroleerd…</div><div id="app" hidden><div class="toolbar"><label>Maand <select id="month"></select></label><button id="toggle" class="secondary">Shiftoverzicht</button><button id="print">Afdrukken / PDF</button><button id="refresh" class="secondary">Vernieuwen</button><button id="waToggle" class="secondary digital-only">WhatsApp · open shiften</button><button id="shareOpen" class="secondary digital-only" title="Vaste, alleen-lezen link voor de WhatsApp-groep">Kopieer link open shiften</button><label class="archive-filter digital-only"><input type="checkbox" id="showDone"> Ook afgewerkte events tonen</label><span id="saveInfo" class="saving"></span></div><section id="waPanel" class="wa-panel digital-only" hidden><h3>WhatsApp-bericht voor open shiften</h3><p>Alleen toekomstige, niet-afgewerkte events en open shiften met een begin- én einduur worden meegenomen. Bewerk de tekst gerust voor je ze kopieert.</p><div class="wa-toolbar"><label>Vanaf <select id="waStart"></select></label><label>Maanden <select id="waMonths"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option><option value="6">6</option><option value="12">12</option></select></label><button id="waGenerate" class="secondary">Bericht opstellen</button></div><textarea id="waText" aria-label="WhatsApp-bericht bewerken" spellcheck="true"></textarea><div class="wa-footer"><button id="waCopy">Kopieer bericht</button><span id="waInfo" class="muted"></span></div></section><div id="content"></div></div></main>
 <script type="module">
 import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 const $=id=>document.getElementById(id), project=localStorage.getItem('mh_project_url'),key=localStorage.getItem('mh_publishable_key');let client,events=[],employees=[],shifts=[],eventExtras=new Map(),runSheets=new Map(),catalog=[],invoices=[],invoiceAssignments=[],financeByEvent=new Map(),mode='planning',busy=false;
@@ -72,16 +94,76 @@ const keynr=v=>String(v??'').trim().replace(/^0+(?=\d)/,'');
 const isDone=e=>['afgewerkt','geklasseerd'].includes(String(e.status||'').toLowerCase());
 function hoursBetween(s,kind){const a=s[kind+'_start'],b=s[kind+'_end'];if(!a||!b)return null;const duration=(new Date(b)-new Date(a))/3600000-(kind==='actual'?n(s.break_minutes)/60:0);return Math.max(0,duration)}
 function percent(num,den){return Number.isFinite(den)&&den>0?new Intl.NumberFormat('nl-BE',{minimumFractionDigits:1,maximumFractionDigits:1}).format(100*num/den)+'%':'—'}
+// Een indicatieve kost per uur voor OPEN SHIFT, gebaseerd op de gemiddelde
+// ingevulde all-in uurkost van actieve medewerkers. Geen fictief vast tarief.
+// WP en ontbrekende/nul tarieven tellen niet mee. De schatting wordt niet
+// opgeslagen en wordt automatisch vervangen zodra een medewerker gekozen is.
+function estimatedOpenRate(){
+ const rates=employees.filter(e=>eligible(e)&&String(e.contract_code||'').toUpperCase()!=='WP')
+  .map(e=>Number(e.hourly_cost_eur)).filter(x=>Number.isFinite(x)&&x>0);
+ return rates.length?rates.reduce((a,b)=>a+b,0)/rates.length:null;
+}
 function financialSummary(e){const f=eventFinancial(e),b=f.turnover?.budget,a=f.turnover?.amount;const pBase=Number.isFinite(b)&&b>0?b:Number.isFinite(a)&&a>0?a:null;const basis=pBase===b?'voorzien budget':'netto-omzet';const pWarn=f.open||f.missingRate||f.missingTimes;const actualMissing=eventShifts(e.id).some(s=>s.employee_id&&!nvt(s)&&(!s.actual_start||!s.actual_end));return `<div class="event-fin digital-only"><div class="fin-grid">
 <div class="fin-col"><h4>Omzet · excl. btw</h4><div class="fin-pair"><span>Netto gefactureerd</span><strong>${a==null?'—':money(a)}</strong></div><div class="fin-pair"><span>Voorzien budget</span><strong>${b==null?'—':money(b)}</strong></div></div>
-<div class="fin-col"><h4>Personeelskost · euro</h4><div class="fin-pair"><span>Gepland</span><strong>${money(f.planned)}</strong></div><div class="fin-pair"><span>Werkelijk</span><strong>${money(f.actual)}</strong></div></div>
-<div class="fin-col"><h4>Personeelskost · aandeel</h4><div class="fin-pair"><span>Gepland / ${basis}</span><strong>${percent(f.planned,pBase)}</strong></div><div class="fin-pair"><span>Werkelijk / gefactureerd</span><strong>${percent(f.actual,a)}</strong></div></div></div>
-<div class="fin-note">${f.open?'Open shiften: '+f.open+' · ':''}${f.missingRate?'Uurkosten ontbreken: '+f.missingRate+' · ':''}${f.missingTimes?'Geplande uren ontbreken: '+f.missingTimes+' · ':''}${actualMissing?'Werkelijke uren nog niet volledig ingevuld · ':''}${safe(f.turnover?.warning||'')}${f.turnover?.warning?' · ':''}Geplande % op ${basis}; werkelijke % op gefactureerde omzet. Voorschotten kunnen de werkelijke % vertekenen. Alleen personeelskost, geen winstmarge.</div></div>`}
-function waTime(val){if(!val)return null;const c=clock(val);if(!/^\d{2}:\d{2}$/.test(c))return null;const [h,m]=c.split(':');return Number(h)+'u'+(m==='00'?'':m)}
+<div class="fin-col"><h4>Personeelskost · euro</h4><div class="fin-pair"><span>Gepland${f.estimatedOpenCount?' (incl. schatting)':''}</span><strong class="${f.estimatedOpenCount?'est-amount':''}">${f.estimatedOpenCount?'± ':''}${money(f.planned)}</strong></div><div class="fin-pair"><span>Werkelijk</span><strong>${money(f.actual)}</strong></div></div>
+<div class="fin-col"><h4>Personeelskost · aandeel</h4><div class="fin-pair"><span>Gepland / ${basis}</span><strong class="${f.estimatedOpenCount?'est-amount':''}">${f.estimatedOpenCount?'± ':''}${percent(f.planned,pBase)}</strong></div><div class="fin-pair"><span>Werkelijk / gefactureerd</span><strong>${percent(f.actual,a)}</strong></div></div></div>
+<div class="fin-note">${f.estimatedOpenCount?'Incl. '+money(f.estimatedOpenAmount)+' indicatieve kost voor '+f.estimatedOpenCount+' open shift(s) · ':''}${f.open?'Open shiften: '+f.open+' · ':''}${f.missingRate?'Uurkosten ontbreken: '+f.missingRate+' · ':''}${f.missingTimes?'Geplande uren ontbreken: '+f.missingTimes+' · ':''}${actualMissing?'Werkelijke uren nog niet volledig ingevuld · ':''}${safe(f.turnover?.warning||'')}${f.turnover?.warning?' · ':''}De open shiften worden geschat met het gemiddelde all-in uurtarief van actieve medewerkers (lichtgrijs). Geplande % op ${basis}; werkelijke % op gefactureerde omzet. Voorschotten kunnen de werkelijke % vertekenen. Alleen personeelskost, geen winstmarge.</div></div>`}
+function waTime(val){if(!val)return null;const c=clock(val);if(!/^\d{2}:\d{2}$/.test(c))return null;const [h,m]=c.split(':');return h+'u'+m}
 function addMonth(ym,count){const [y,m]=ym.split('-').map(Number);const d=new Date(Date.UTC(y,m-1+count,1));return d.toISOString().slice(0,7)}
 function refreshWaMonths(){const s=$('waStart'),old=s.value;const options=[...new Set(events.map(e=>e.event_date.slice(0,7)).filter(m=>m>=today.slice(0,7)))].sort();s.innerHTML=options.map(m=>`<option value="${m}">${monthNames[Number(m.slice(5,7))-1]} ${m.slice(0,4)}</option>`).join('');s.value=options.includes(old)?old:(options.includes($('month').value)?$('month').value:(options[0]||''))}
-function makeWhatsappMessage(){const start=$('waStart').value;if(!start)return 'Er zijn geen toekomstige events beschikbaar.';const end=addMonth(start,Number($('waMonths').value)||4);const byMonth=new Map();for(const e of [...events].sort((a,b)=>a.event_date.localeCompare(b.event_date))){if(e.event_date<today||e.event_date.slice(0,7)<start||e.event_date.slice(0,7)>=end||isDone(e))continue;const open=eventShifts(e.id).filter(s=>!s.employee_id&&!nvt(s));if(!open.length)continue;const times=new Map();for(const sh of open){const a=waTime(sh.planned_start),b=waTime(sh.planned_end),label=a&&b?`van ${a} tot ${b}`:a?`vanaf ${a} (einduur nog te bepalen)`:b?`tot ${b} (startuur nog te bepalen)`:'uren nog te bepalen';if(!times.has(label))times.set(label,{afwas:false});if(/afwas|afwasser|vaatwas/i.test(sh.job_title||''))times.get(label).afwas=true}const formatted=[...times].map(([t,detail])=>t+(detail.afwas?' (ook afwas gezocht)':''));const m=e.event_date.slice(0,7);if(!byMonth.has(m))byMonth.set(m,[]);const day=Number(e.event_date.slice(8,10));byMonth.get(m).push(`- ${wd(e.event_date)} ${day.toString().padStart(2,'0')}/${m.slice(5,7)} - ${formatted.join(' / ')}`)}if(!byMonth.size)return 'Er zijn geen open shiften gevonden voor deze periode. Controleer of de shiften zonder medewerker geplande uren hebben.';let out='Hey allemaal! 😁\n\nHierbij een overzichtje van de open shiften voor de komende maanden:';for(const [m,lines] of byMonth){out+=`\n\n${monthNames[Number(m.slice(5,7))-1][0].toUpperCase()+monthNames[Number(m.slice(5,7))-1].slice(1)} ${m.slice(0,4)}\n${lines.join('\n')}`}return out+'\n\nLaat gerust weten welke shiften je kunt invullen. Merci! 😊'}
-function eventFinancial(e){const ss=eventShifts(e.id).filter(s=>!nvt(s));let planned=0,actual=0,missingRate=0,missingTimes=0,open=0,external=0;for(const s of ss){const m=employees.find(m=>m.id===s.employee_id);if(!m){open++;continue}if(String(m.contract_code||'').toUpperCase()==='WP'){external++;continue}const rate=(s.hourly_cost_snapshot_eur!==null&&s.hourly_cost_snapshot_eur!==undefined)?Number(s.hourly_cost_snapshot_eur):Number(m.hourly_cost_eur);if((s.hourly_cost_snapshot_eur==null&&m.hourly_cost_eur==null)||!Number.isFinite(rate)){missingRate++;continue}const hp=hoursBetween(s,'planned'),ha=hoursBetween(s,'actual');if(hp!==null)planned+=hp*rate;else missingTimes++;if(ha!==null)actual+=ha*rate;}const turnover=financeByEvent.get(String(e.id));return{planned,actual,missingRate,missingTimes,open,external,turnover,ratio:turnover?.amount>0?100*actual/turnover.amount:null}}
+function makeWhatsappMessage(){
+ const start=$('waStart').value;
+ if(!start)return 'Er zijn geen toekomstige events beschikbaar.';
+ const end=addMonth(start,Number($('waMonths').value)||4);
+ const byMonth=new Map();
+ for(const e of [...events].sort((a,b)=>a.event_date.localeCompare(b.event_date))){
+  if(e.event_date<today||e.event_date.slice(0,7)<start||e.event_date.slice(0,7)>=end||isDone(e))continue;
+  const open=eventShifts(e.id).filter(s=>!s.employee_id&&!nvt(s)&&s.planned_start&&s.planned_end);
+  if(!open.length)continue;
+  const m=e.event_date.slice(0,7);
+  if(!byMonth.has(m))byMonth.set(m,[]);
+  const day=e.event_date.slice(8,10);
+  // Elke open shift krijgt zijn eigen regel, ook bij identieke uren.
+  // Alleen afwas wordt als functie vermeld.
+  for(const sh of open){
+   const a=waTime(sh.planned_start),b=waTime(sh.planned_end);
+   if(!a||!b)continue;
+   const time=`van ${a} tot ${b}`;
+   const afwas=/afwas|afwasser|vaatwas/i.test(sh.job_title||'')?' (afwas)':'';
+   byMonth.get(m).push(`- ${wd(e.event_date)} ${day}/${m.slice(5,7)} - ${time}${afwas}`);
+  }
+ }
+ if(!byMonth.size)return 'Er zijn geen open shiften gevonden voor deze periode.';
+ let out='Hey allemaal! 😁\n\nHierbij een overzichtje van de open shiften voor de komende maanden:';
+ for(const [m,lines] of byMonth){out+=`\n\n${monthNames[Number(m.slice(5,7))-1][0].toUpperCase()+monthNames[Number(m.slice(5,7))-1].slice(1)} ${m.slice(0,4)}\n${lines.join('\n')}`}
+ return out+'\n\nLaat gerust weten welke shiften je kunt invullen. Merci! 😊';
+}
+function eventFinancial(e){
+ const ss=eventShifts(e.id).filter(s=>!nvt(s));
+ let planned=0,actual=0,missingRate=0,missingTimes=0,open=0,external=0;
+ let estimatedOpenAmount=0,estimatedOpenCount=0;
+ const openRate=estimatedOpenRate();
+ for(const s of ss){
+  const m=employees.find(m=>m.id===s.employee_id);
+  if(!m){
+   open++;
+   const hp=hoursBetween(s,'planned');
+   if(hp!==null&&openRate!==null){
+    const estimated=hp*openRate;
+    planned+=estimated;estimatedOpenAmount+=estimated;estimatedOpenCount++;
+   }else if(hp===null){missingTimes++}else{missingRate++}
+   continue;
+  }
+  if(String(m.contract_code||'').toUpperCase()==='WP'){external++;continue}
+  const rate=(s.hourly_cost_snapshot_eur!==null&&s.hourly_cost_snapshot_eur!==undefined)?Number(s.hourly_cost_snapshot_eur):Number(m.hourly_cost_eur);
+  if((s.hourly_cost_snapshot_eur==null&&m.hourly_cost_eur==null)||!Number.isFinite(rate)){missingRate++;continue}
+  const hp=hoursBetween(s,'planned'),ha=hoursBetween(s,'actual');
+  if(hp!==null)planned+=hp*rate;else missingTimes++;
+  if(ha!==null)actual+=ha*rate;
+ }
+ const turnover=financeByEvent.get(String(e.id));
+ return{planned,actual,missingRate,missingTimes,open,external,turnover,estimatedOpenAmount,estimatedOpenCount,ratio:turnover?.amount>0?100*actual/turnover.amount:null};
+}
 function normalizeDate(d){return /^\d{4}-\d{2}-\d{2}$/.test(d||'')?d:''}
 async function loadFinancialData(){financeByEvent=new Map();try{const [cr,ir,ar]=await Promise.all([client.from('mh_event_catalog').select('project_number,teamleader_dealnr,budget_ex_vat,project_status'),readAll('mh_sales_invoices','id,invoice_year,invoice_number,teamleader_dealnr,teamleader_projectnr,signed_amount_ex_vat,amount_ex_vat,credited_amount_ex_vat'),readAll('mh_invoice_assignments','invoice_id,assignment_type,teamleader_dealnr')]);for(const q of [cr,ir,ar])if(q.error)throw q.error;catalog=cr.data||[];invoices=ir.data||[];invoiceAssignments=ar.data||[];
  const byProject=new Map(catalog.filter(p=>p.project_number).map(p=>[keynr(p.project_number),p]));const byDeal=new Map();for(const p of catalog){const k=keynr(p.teamleader_dealnr);if(!k)continue;if(!byDeal.has(k))byDeal.set(k,[]);byDeal.get(k).push(p)}const assignments=new Map(invoiceAssignments.map(x=>[String(x.invoice_id),x]));
@@ -107,7 +189,10 @@ function employeeSelect(s){
 function contract(s){const m=employees.find(e=>e.id===s.employee_id);const val=(m?.contract_code||'').toLowerCase();return ({'actief':'AC','ac':'AC','nowjobs':'NJ','nj':'NJ','maurushoeve':'MH','mh':'MH','skedle':'SK','sk':'SK','wp':'WP','zf':'ZF'})[val]||m?.contract_code||'—'}
 function costInfo(s){
  const e=employees.find(x=>x.id===s.employee_id);
- if(!e||nvt(s))return {label:'—',kind:'none'};
+ if(nvt(s))return {label:'—',kind:'none'};
+ if(!e){const estimate=estimatedOpenRate();return estimate!==null?
+   {label:'± '+money(estimate)+'/u',kind:'estimate',rate:estimate}:
+   {label:'Geen schatting beschikbaar',kind:'missing'};}
  // De door de klant betaalde WP's zijn geen kost voor Maurushoeve.
  if((e.contract_code||'').toUpperCase()==='WP')return {label:'N.v.t. (extern)',kind:'external'};
  if(e.hourly_cost_eur===null||e.hourly_cost_eur===undefined||e.hourly_cost_eur==='')return {label:'Nog in te vullen',kind:'missing'};
@@ -119,9 +204,9 @@ function row(s,ev,overview=false){const selected=nvt(s);const m=employees.find(x
 if(overview)str+=`<td>${safe(wd(ev.event_date).slice(0,2))} ${safe(ev.event_date.slice(8,10))}/${safe(ev.event_date.slice(5,7))}</td><td>${safe(eventLabel(ev))}</td>`;
 str+=`<td>${safe(department(s))}</td><td><input class="job-edit" aria-label="Functie" data-id="${s.id}" data-field="job_title" value="${safe(s.job_title)}" title="Functie voor dit feest aanpassen"></td><td class="${!s.employee_id&&!selected?'open':''}">${employeeSelect(s)}</td><td>${field(s,'planned_start')}</td><td>${field(s,'planned_end')}</td>`;
 if(!overview)str+=`<td class="digital-only">${field(s,'actual_start')}</td><td class="digital-only">${field(s,'actual_end')}</td><td class="digital-only">${field(s,'break_minutes','number')}</td>`;
-if(overview)str+=`<td>${safe(selected?'N.v.t.':s.employee_id?contract(s):'OPEN SHIFT')}</td><td>${safe(costInfo(s).label)}</td>`;
+if(overview)str+=`<td>${safe(selected?'N.v.t.':s.employee_id?contract(s):'OPEN SHIFT')}</td><td><span class="${costInfo(s).kind==='estimate'?'estimated-rate':''}" title="${costInfo(s).kind==='estimate'?'Indicatief gemiddelde van actieve medewerkers; wordt vervangen zodra een medewerker is gekozen.':''}">${safe(costInfo(s).label)}</span></td>`;
 str+=`<td class="digital-only"><input type="checkbox" data-id="${s.id}" data-field="contract_created" ${s.contract_created?'checked':''} ${selected?'disabled':''}></td>`;
-if(!overview)str+=`<td class="digital-only">${shiftHours(s,'planned')}</td><td class="digital-only">${shiftHours(s,'actual')}</td><td class="digital-only" title="Indicatief tarief; geen dubbele boekhoudkundige kost boeken">${safe(costInfo(s).label)}</td>`;
+if(!overview)str+=`<td class="digital-only">${shiftHours(s,'planned')}</td><td class="digital-only">${shiftHours(s,'actual')}</td><td class="digital-only" title="Indicatief tarief; geen dubbele boekhoudkundige kost boeken"><span class="${costInfo(s).kind==='estimate'?'estimated-rate':''}" title="${costInfo(s).kind==='estimate'?'Indicatief gemiddelde van actieve medewerkers; wordt vervangen zodra een medewerker is gekozen.':''}">${safe(costInfo(s).label)}</span></td>`;
 str+=`<td class="act"><button class="secondary" data-delete="${s.id}" title="Shift verwijderen">Wissen</button></td>`;
 if(!overview)str+='<td class="print-only">__________</td><td class="print-only">__________</td><td class="print-only">______</td><td class="print-only" style="width:13%">______________</td>';
 return str+'</tr>'}
@@ -159,35 +244,190 @@ function runLabel(l,v){return v===null||v===undefined||v===''?'':`<span><b>${saf
 function schedulePreview(e){
  const r=runRow(e),guests=[runLabel('Extra receptiegasten',runNumber(r.reception_extra_guests)),runLabel('Extra gasten dessertbuffet & dansfeest',runNumber(r.dessert_extra_guests ?? r.party_extra_guests))].filter(Boolean).join('');
  const lines=String(r.schedule_text||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
- if(!lines.length&&!guests)return '';
+ // Op papier tonen we ook een leeg briefingvak als schrijfruimte.
  const list=lines.map(line=>{const m=line.match(/^\s*(?:[•\-]\s*)?((?:\d{1,2}(?::|u)\d{0,2})(?:\s*(?:tot|[-–—])\s*\d{1,2}(?::|u)\d{0,2})?)\s*(?:[:.\-–—]\s*|\s+)(.+)$/i);return m?`<li><span class="run-time">${safe(m[1])}</span><span>${safe(m[2])}</span></li>`:`<li><span class="run-line-full">${safe(line.replace(/^[•-]\s*/,''))}</span></li>`}).join('');
- return `<section class="run-sheet"><h3>Draaiboek · verloop van het feest</h3>${guests?`<div class="run-guests">${guests}</div>`:''}${list?`<ul class="run-lines">${list}</ul>`:''}</section>`;
+ return `<section class="event-print-bottom print-only"><div class="print-box print-schedule"><h3>Draaiboek · verloop van het feest</h3>${guests?`<div class="run-guests">${guests}</div>`:''}${list?`<ul class="run-lines">${list}</ul>`:'<p class="print-muted">Nog geen draaiboek ingevuld</p>'}</div><div class="print-box print-briefing"><h3>Briefing · aandachtspunten voor het team</h3><div class="briefing-text">${safe(r.briefing_text||'')}</div></div></section>`;
 }
-function scheduleEditor(e){const r=runRow(e);return `<div class="run-editor-wrap"><strong>Extra gasten per onderdeel</strong><div class="run-fields">${[['reception_extra_guests','Extra gasten receptie'],['dessert_extra_guests','Extra gasten dessertbuffet & dansfeest']].map(([k,l])=>`<label>${l}<input type="number" min="0" step="1" data-runfield="${k}" value="${safe(runNumber(r[k]))}" placeholder="0"></label>`).join('')}</div><label><strong>Volledig draaiboek (een onderdeel per regel)</strong><textarea class="run-editor" data-runfield="schedule_text" placeholder="16u30: Ontvangst gasten&#10;17u00: Ceremonie&#10;18u00: Receptie&#10;19u30: Einde receptie - aan tafel - eerste glas&#10;20u00: Menu (voorgerecht / hoofdgerecht)&#10;21u30: Einde menu&#10;22u00: Dessertbuffet&#10;23u00: Einde dessertbuffet&#10;23u00 tot 23u30: Dansfeest&#10;00u30 à 01u00: Late night snack&#10;04u00: Einde dansfeest">${safe(r.schedule_text||'')}</textarea></label><span class="run-help">Je kunt ook tekst met verschillende tijdsnotaties plakken. De volgorde die je invoert wordt behouden, ook na middernacht. Alleen ingevulde onderdelen worden afgedrukt.</span></div>`}
+// Lees de eerste en laatste tijd uit het vrij ingevoerde draaiboek.
+// Personeelsshiften blijven apart: die beginnen of eindigen vaak op andere uren.
+function scheduleBounds(raw){
+ const lines=String(raw||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+ const times=[];
+ const timeRe=/(?:^|\s)(\d{1,2})\s*(?:u|h|:)\s*(\d{2})?(?=\D|$)/gi;
+ for(const line of lines){
+  let m;const found=[];timeRe.lastIndex=0;
+  while((m=timeRe.exec(line))!==null){const h=Number(m[1]),min=Number(m[2]||'0');if(h<=23&&min<=59)found.push(String(h).padStart(2,'0')+':'+String(min).padStart(2,'0'))}
+  if(found.length)times.push(found);
+ }
+ return times.length?{start:times[0][0],end:times.at(-1).at(-1)}:null;
+}
+// Een draaiboekregel is een tijdstip of tijdsperiode met een omschrijving.
+// We herkennen ook 18u / 18u30 / 18:30 en onthouden het verloop over middernacht.
+function readDraaiboekTimes(raw,event){
+ const lines=String(raw||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+ const entries=[];let previous=-1;let day=0;
+ const r=/^\s*(?:[-•]\s*)?(\d{1,2})\s*(?:u|h|:)\s*(\d{2})?(?:\s*(?:tot|[-–—]|à)\s*(\d{1,2})\s*(?:u|h|:)\s*(\d{2})?)?\s*[:.\-–—]?\s*(.*)$/i;
+ for(const line of lines){
+  const m=line.match(r);if(!m)continue;
+  const h=Number(m[1]),mi=Number(m[2]||0);if(h>23||mi>59)continue;
+  let start=h*60+mi+day*1440;
+  while(previous>=0&&start<previous-720){day++;start+=1440}
+  const endH=m[3]===undefined?h:Number(m[3]);const endM=Number(m[4]||0);
+  if(endH>23||endM>59)continue;
+  let end=endH*60+endM+day*1440;if(end<start)end+=1440;
+  entries.push({start,end,label:String(m[5]||'').toLocaleLowerCase('nl')});previous=end;
+ }
+ const match=(re,skipEnd=false)=>entries.find(e=>re.test(e.label)&&(!skipEnd||!/(?:einde|afgelopen|stop)/.test(e.label))); 
+ const reception=match(/receptie|aperitief|aperitiefmoment/,true)?.start;
+ const dessertEnd=match(/(?:einde|afgelopen|stop)\s*(?:van\s*(?:het|de)\s*)?(?:dessert|dessertbuffet)/)?.start;
+ const lns=match(/(?:late\s*night\s*snack|\blns\b|nacht(?:hap|snack))/,true)?.start;
+ const finish=match(/(?:einde|afgelopen|stop)\s*(?:van\s*(?:het|de)\s*)?(?:feest|dansfeest|party)/)?.start;
+ // Gebruik het laatste draaiboektijdstip alleen als fallback voor einde feest;
+ // niet een willekeurig dessert- of LNS-tijdstip als einde interpreteren.
+ const endFallback=(event.end_time||'').slice(0,5);
+ const endClock=/^(\d{2}):(\d{2})$/.exec(endFallback);
+ let endEvent=finish;
+ if(!Number.isFinite(endEvent)&&endClock&&entries.length){
+  endEvent=Number(endClock[1])*60+Number(endClock[2]);
+  while(endEvent<entries[0].start)endEvent+=1440;
+ }
+ return {first:entries[0]?.start,reception,dessertEnd,lns,endEvent,entries};
+}
+function isOperationalShift(s){
+ const r=String(s.job_title||'').toLocaleLowerCase('nl');
+ return !/dagco|onderhoud|opbouw|afwas|afwasser|vaatwas|eventco|weddingplanner/.test(r)
+  && (/kok|keuken|handjes|ober|zaalverantwoordelijke/.test(r));
+}
+function proposeRoleHours(shift,t,firstEmployeeStart){
+ const r=String(shift.job_title||'').toLocaleLowerCase('nl').trim();
+ let a=null,b=null;
+ if(/onderhoud/.test(r)){a=480;b=600}
+ else if(/opbouw/.test(r)){a=600;b=720}
+ else if(/dagco/.test(r)){a=600;b=firstEmployeeStart}
+ else if(/zaalverantwoordelijke/.test(r)){a=t.first-90;b=t.dessertEnd+90}
+ else if(/ober\s*(?:drank|bar)/.test(r)&&/verantwoordelijke|sluit/.test(r)){a=t.reception-60;b=t.endEvent+60}
+ else if(/ober\s*(?:drank|bar)/.test(r)){a=t.reception-60;b=t.dessertEnd+90}
+ else if(/ober\s*food/.test(r)){a=t.reception-30;b=t.dessertEnd+90}
+ else if(/handjes/.test(r)){a=t.reception-60;b=t.dessertEnd+60}
+ else if(/(?:^|\b)(?:kok|keuken)(?:\b|$)/.test(r)&&!/afwas|afwasser|vaatwas/.test(r)){
+  a=t.reception-120;b=Number.isFinite(t.lns)?t.lns+90:t.dessertEnd+60;
+ }
+ // Afwas en andere niet-gedefinieerde functies blijven bewust onaangeroerd.
+ if(!Number.isFinite(a)||!Number.isFinite(b)||b<=a)return null;
+ return {start:a,end:b};
+}
+function eventRelativeMinutes(iso,eventDay){
+ if(!iso)return null;
+ const time=clock(iso),m=/^(\d{2}):(\d{2})$/.exec(time);
+ if(!m)return null;
+ const day=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Brussels',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(iso));
+ const base=new Date(eventDay+'T12:00:00Z'),current=new Date(day+'T12:00:00Z');
+ return Math.round((current-base)/86400000)*1440+Number(m[1])*60+Number(m[2]);
+}
+function minuteToShiftTs(eventDay,min){
+ const offset=Math.floor(min/1440),tod=((min%1440)+1440)%1440;
+ const date=new Date(eventDay+'T12:00:00');date.setDate(date.getDate()+offset);
+ const day=date.toLocaleDateString('sv-SE');
+ return ts(day,String(Math.floor(tod/60)).padStart(2,'0')+':'+String(tod%60).padStart(2,'0'));
+}
+
+function syncScheduleBounds(root){
+ const area=root.querySelector('[data-runfield="schedule_text"]'),times=scheduleBounds(area?.value);
+ if(!times)return;
+ for(const [field,next] of [['start_time',times.start],['end_time',times.end]]){
+  const input=root.querySelector('[data-evfield="'+field+'"]');
+  if(!input)continue;
+  const prev=input.dataset.autoValue;
+  if(!input.value||prev===input.value){input.value=next;input.dataset.autoValue=next}
+ }
+}
+function scheduleEditor(e){const r=runRow(e);return `<div class="run-editor-wrap"><strong>Extra gasten per onderdeel</strong><div class="run-fields">${[['reception_extra_guests','Extra gasten receptie'],['dessert_extra_guests','Extra gasten dessertbuffet & dansfeest']].map(([k,l])=>`<label>${l}<input type="number" min="0" step="1" data-runfield="${k}" value="${safe(runNumber(r[k]))}" placeholder="0"></label>`).join('')}</div><label><strong>Volledig draaiboek (een onderdeel per regel)</strong><textarea class="run-editor" data-runfield="schedule_text" placeholder="16u30: Ontvangst gasten&#10;17u00: Ceremonie&#10;18u00: Receptie&#10;19u30: Einde receptie - aan tafel - eerste glas&#10;20u00: Menu (voorgerecht / hoofdgerecht)&#10;21u30: Einde menu&#10;22u00: Dessertbuffet&#10;23u00: Einde dessertbuffet&#10;23u00 tot 23u30: Dansfeest&#10;00u30 à 01u00: Late night snack&#10;04u00: Einde dansfeest">${safe(r.schedule_text||'')}</textarea></label><label><strong>Briefing voor het team</strong><textarea class="run-editor briefing-editor" data-runfield="briefing_text" placeholder="Belangrijke aandachtspunten, taakverdeling, leveranciers, allergieën, bijzonderheden ...">${safe(r.briefing_text||'')}</textarea></label><span class="run-help">Je kunt ook tekst met verschillende tijdsnotaties plakken. De volgorde die je invoert wordt behouden, ook na middernacht. Alleen ingevulde onderdelen worden afgedrukt.</span></div>`}
 function eventShifts(eventId){return shifts.filter(s=>s.event_id===eventId).sort(shiftSort)}
 function render(){const evs=events.filter(e=>e.event_date.startsWith($('month').value)&&($('showDone').checked||!isDone(e))).sort((a,b)=>a.event_date.localeCompare(b.event_date));$('content').className=mode==='overview'?'overview-print':'';$('toggle').textContent=mode==='overview'?'Maandplanning':'Shiftoverzicht';$('pageRule').textContent=`@media print{@page{size:A4 ${mode==='overview'?'portrait':'landscape'};margin:7mm}}`;
 if(!evs.length){$('content').innerHTML='<div class="empty">Geen feesten in deze maand.</div>';return}
 if(mode==='overview'){let rows='';for(const e of evs){rows+=`<tr class="sep"><td colspan="11">${safe(nlDate(e.event_date))} · ${safe(eventLabel(e))} · ${safe(e.event_code||'')}</td></tr>`;rows+=eventShifts(e.id).map(s=>row(s,e,true)).join('')};$('content').innerHTML=`<h2 class="print-title">Shiftoverzicht · ${safe($('month').selectedOptions[0]?.text)}</h2><div class="full"><table><thead><tr>${['Datum','Feest','Afdeling','Taak','Medewerker','Start','Einde','Via','All-in kost/u','Contract','Actie'].map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;return}
 $('content').innerHTML=evs.map(e=>{let ss=eventShifts(e.id);let last='',rows='';for(const s of ss){if(department(s)!==last){last=department(s);rows+=`<tr class="dept"><td colspan="17">${safe(last)}</td></tr>`}rows+=row(s,e)}let extra=eventExtras.get(String(e.id))||{};let info=[['Concept',e.concept||extra.concept],['Gasten',extra.guests||e.guest_count_note],['Eventco',extra.weddingplanner],['Type feest',extra.event_type||e.event_type],['Extra gasten',e.extra_guest_note],['Ceremonie',e.ceremony_note],['LNS',e.late_snack_note],['Timing',(e.start_time||'').slice(0,5)+' – '+(e.end_time||'').slice(0,5)]];return `<section class="event"><div class="event-head"><span>${safe(eventLabel(e))}</span><span>${safe(nlDate(e.event_date))} · ${safe(e.event_code||'')} ${isDone(e)?'· AFGEWERKT':''}</span></div><div class="event-top-tools digital-only"><button class="secondary archive-button" data-finish="${e.id}">${isDone(e)?'Heropenen':'Markeer als afgewerkt'}</button></div> <details class="event-extra digital-only"><summary>Eventgegevens en timing invullen</summary><div class="event-fields">
  ${[['concept','Concept',e.concept||extra.concept,'text'],['guest_count_note','Aantal gasten',e.guest_count_note,'text'],['ceremony_note','Ceremonie / plaats',e.ceremony_note,'text'],['ceremony_time','Ceremonie om',e.ceremony_time,'time'],['reception_time','Receptie om',e.reception_time,'time'],['dinner_time','Diner om',e.dinner_time,'time'],['party_time','Dansfeest om',e.party_time,'time'],['start_time','Start event',e.start_time,'time'],['end_time','Einde event',e.end_time,'time'],['late_snack_note','Late night snack',e.late_snack_note,'text'],['notes','Opmerkingen / leveranciers',e.notes,'textarea']].map(([k,l,v,t])=>`<label>${l}${t==='textarea'?`<textarea data-evfield="${k}">${safe(v||'')}</textarea>`:`<input data-evfield="${k}" type="${t}" value="${safe(v||'')?.slice?.(0,t==='time'?5:1000)||''}">`}</label>`).join('')}
- </div>${scheduleEditor(e)}<button type="button" data-save-event="${e.id}">Eventgegevens en draaiboek opslaan</button> <span class="muted">Gegevens worden bewaard op het event, los van Teamleader-imports.</span></details><div class="info">${info.map(([a,b])=>`<div><b>${a}</b>${safe(b||'—')}</div>`).join('')}</div>${schedulePreview(e)}<div class="full"><table><thead><tr>${['Afdeling','Taak','Medewerker','Start','Einde','Werkelijk start','Werkelijk einde','Pauze (min)','Contract','Gepland (u)','Werkelijk (u)','All-in kost/u','Actie','Werkelijk begin','Werkelijk einde','Pauze','Handtekening'].map((x,i)=>`<th class="${i>=13?'print-only':i>=5&&i<=12?'digital-only':''}">${x}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div><div class="total">${ss.length} shiften</div>
+ </div><div class="run-help">Begin- en einduur van het event worden uit het draaiboek voorgesteld. De uren van personeelsshiften pas je afzonderlijk aan.</div>${scheduleEditor(e)}<button type="button" data-save-event="${e.id}">Eventgegevens, draaiboek en briefing opslaan</button> <span class="muted">Gegevens worden bewaard op het event, los van Teamleader-imports.</span></details><div class="info">${info.map(([a,b])=>`<div><b>${a}</b>${safe(b||'—')}</div>`).join('')}</div><div class="full"><table><thead><tr>${['Afdeling','Taak','Medewerker','Start','Einde','Werkelijk start','Werkelijk einde','Pauze (min)','Contract','Gepland (u)','Werkelijk (u)','All-in kost/u','Actie','Werkelijk begin','Werkelijk einde','Pauze','Handtekening'].map((x,i)=>`<th class="${i>=13?'print-only':i>=5&&i<=12?'digital-only':''}">${x}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div><div class="total">${ss.length} shiften</div>
 
- <div class="controls digital-only"><b>Extra shift:</b><select class="department">${order.map(x=>`<option>${x}</option>`).join('')}</select><input class="job" placeholder="Eigen functie (bv. Barista)" style="max-width:190px"><button data-add="${e.id}">+ Shift toevoegen</button><button class="secondary" data-default="${e.id}">Ontbrekende standaardshiften</button></div>
- ${financialSummary(e)}</section>`}).join('')}
+ <div class="controls digital-only"><b>Extra shift:</b><select class="department">${order.map(x=>`<option>${x}</option>`).join('')}</select><input class="job" placeholder="Eigen functie (bv. Barista)" style="max-width:190px"><button data-add="${e.id}">+ Shift toevoegen</button><button class="secondary" data-default="${e.id}">Ontbrekende standaardshiften</button><button class="secondary" data-shift-hours="${e.id}" title="Bereken per functie op basis van receptie, dessert, LNS en einde feest. Voor dagco: tot de eerste operationele medewerker.">Functieuren voorstellen voor open shiften</button></div>
+ ${financialSummary(e)}${schedulePreview(e)}</section>`}).join('')}
 async function reload(){let [ev,em,sh]=await Promise.all([client.from('mh_events').select('*').order('event_date'),client.from('mh_employees').select('*'),client.from('mh_shifts').select('*').order('created_at',{ascending:true}).order('id',{ascending:true})]);for(const item of [ev,em,sh])if(item.error)throw item.error;events=ev.data;employees=em.data;shifts=sh.data;
  const {data:ext,error:extError}=await client.from('mh_event_week_details').select('event_id,concept,guests,weddingplanner,event_type');
  if(extError){notice('Eventaanvullingen niet opgehaald: '+extError.message,true);eventExtras=new Map()}else{eventExtras=new Map((ext||[]).map(x=>[String(x.event_id),x]))}
- const {data:runData,error:runError}=await client.from('mh_event_run_sheets').select('event_id,reception_extra_guests,dessert_extra_guests,party_extra_guests,schedule_text');
+ const {data:runData,error:runError}=await client.from('mh_event_run_sheets').select('event_id,reception_extra_guests,dessert_extra_guests,party_extra_guests,schedule_text,briefing_text');
  if(runError){runSheets=new Map();notice('Draaiboek kan niet worden geladen. Controleer eerst SQL 20: '+runError.message,true)}else{runSheets=new Map((runData||[]).map(r=>[String(r.event_id),r]))}
  const financialError=await loadFinancialData();monthOptions();refreshWaMonths();render();$('saveInfo').textContent='Gegevens opgehaald uit Supabase';notice(runError?'Planning geladen, maar het draaiboek is niet beschikbaar. Voer eerst SQL 20 uit: '+runError.message:financialError?'Planning geladen. Financiële cijfers tijdelijk niet beschikbaar: '+financialError:'Online planning geladen. Wijzigingen worden pas bevestigd nadat ze in Supabase opgeslagen zijn.',!!runError||!!financialError)}
 async function update(id,patch){if(busy)return;busy=true;$('saveInfo').textContent='Opslaan…';try{const {error}=await client.from('mh_shifts').update(patch).eq('id',id);if(error)throw error;await reload();$('saveInfo').textContent='Opgeslagen in Supabase ✓'}catch(e){notice('Wijziging niet opgeslagen: '+e.message,true);$('saveInfo').textContent='FOUT — niet opgeslagen';await reload().catch(()=>{})}finally{busy=false}}
 async function add(eventId,dept,job){if(!job?.trim()){notice('Vul eerst een functie in.',true);return}if(busy)return;busy=true;try{const {error}=await client.from('mh_shifts').insert({event_id:eventId,department:dept,job_title:job.trim()});if(error)throw error;await reload()}catch(e){notice('Shift toevoegen mislukt: '+e.message,true)}finally{busy=false}}
+$('content').addEventListener('input',e=>{if(e.target.matches('[data-runfield="schedule_text"]'))syncScheduleBounds(e.target.closest('.event-extra'));});
 $('content').addEventListener('change',async e=>{const t=e.target,id=t.dataset.id,key=t.dataset.field;if(!id||!key)return;const s=shifts.find(x=>x.id===id),ev=events.find(x=>x.id===s.event_id);let patch={};if(key==='job_title'){if(!t.value.trim()){notice('Een functie mag niet leeg zijn.',true);render();return}patch={job_title:t.value.trim()}}else if(key==='employee_id'){if(t.value==='__nvt__'){patch={employee_id:null,notes:markNvt(s.notes,true),planned_start:null,planned_end:null,actual_start:null,actual_end:null,contract_created:false,break_minutes:0}}else{patch={employee_id:t.value||null,notes:markNvt(s.notes,false)}}}else if(key.endsWith('_start')||key.endsWith('_end')){let v=t.value;if(v){const old=s[key];let day=ev.event_date;if(key.endsWith('_end')){const startClock=clock(s[key.replace('_end','_start')]);if(startClock&&v<startClock){const dt=new Date(day+'T12:00:00');dt.setDate(dt.getDate()+1);day=dt.toLocaleDateString('sv-SE')}}patch[key]=ts(day,v)}else patch[key]=null;
 // When a start time changes, also adjust an existing end crossing midnight.
 if(key.endsWith('_start')&&v){const endKey=key.replace('_start','_end'),endClock=clock(s[endKey]);if(endClock){let endDay=ev.event_date;if(endClock<v){const dt=new Date(endDay+'T12:00:00');dt.setDate(dt.getDate()+1);endDay=dt.toLocaleDateString('sv-SE')}patch[endKey]=ts(endDay,endClock)}}}else if(key==='contract_created')patch[key]=t.checked;else if(key==='break_minutes')patch[key]=Math.max(0,Math.round(Number(t.value)||0));await update(id,patch)});
-$('content').addEventListener('click',async e=>{const save=e.target.closest('[data-save-event]'),finish=e.target.closest('[data-finish]');if(save){if(busy)return;const event=events.find(x=>x.id===save.dataset.saveEvent),root=save.closest('.event-extra');if(!event||!root)return;const patch={};for(const input of root.querySelectorAll('[data-evfield]'))patch[input.dataset.evfield]=input.value.trim()||(input.type==='time'?null:null);if(busy)return;busy=true;try{const{error}=await client.from('mh_events').update(patch).eq('id',event.id);if(error)throw error;const runPatch={event_id:event.id};for(const input of root.querySelectorAll('[data-runfield]')){const k=input.dataset.runfield;if(k==='schedule_text')runPatch[k]=input.value.trim()||null;else{const raw=input.value.trim();if(raw&&(!/^\d+$/.test(raw)||Number(raw)>100000))throw Error('Gebruik een geldig, positief aantal extra gasten.');runPatch[k]=raw===''?null:Number(raw)}}runPatch.party_extra_guests=runPatch.dessert_extra_guests;const{error:runSaveError}=await client.from('mh_event_run_sheets').upsert(runPatch,{onConflict:'event_id'});if(runSaveError)throw Error('Eventbasis opgeslagen, maar draaiboek niet: '+runSaveError.message);notice('Eventgegevens, extra gasten en draaiboek opgeslagen.');await reload();}catch(err){notice('Eventgegevens niet opgeslagen: '+err.message,true)}finally{busy=false}return}
+$('content').addEventListener('click',async e=>{const save=e.target.closest('[data-save-event]'),finish=e.target.closest('[data-finish]');if(save){if(busy)return;const event=events.find(x=>x.id===save.dataset.saveEvent),root=save.closest('.event-extra');if(!event||!root)return;const patch={};syncScheduleBounds(root);for(const input of root.querySelectorAll('[data-evfield]'))patch[input.dataset.evfield]=input.value.trim()||(input.type==='time'?null:null);if(busy)return;busy=true;try{const{error}=await client.from('mh_events').update(patch).eq('id',event.id);if(error)throw error;const runPatch={event_id:event.id};for(const input of root.querySelectorAll('[data-runfield]')){const k=input.dataset.runfield;if(k==='schedule_text'||k==='briefing_text')runPatch[k]=input.value.trim()||null;else{const raw=input.value.trim();if(raw&&(!/^\d+$/.test(raw)||Number(raw)>100000))throw Error('Gebruik een geldig, positief aantal extra gasten.');runPatch[k]=raw===''?null:Number(raw)}}runPatch.party_extra_guests=runPatch.dessert_extra_guests;const{error:runSaveError}=await client.from('mh_event_run_sheets').upsert(runPatch,{onConflict:'event_id'});if(runSaveError)throw Error('Eventbasis opgeslagen, maar draaiboek niet: '+runSaveError.message);notice('Eventgegevens, extra gasten, draaiboek en briefing opgeslagen.');await reload();}catch(err){notice('Eventgegevens niet opgeslagen: '+err.message,true)}finally{busy=false}return}
+ const fillHours=e.target.closest('[data-shift-hours]');
+ if(fillHours){
+  if(busy)return;
+  const event=events.find(x=>x.id===fillHours.dataset.shiftHours);
+  if(!event)return;
+  const allShifts=eventShifts(event.id);
+  const candidates=allShifts.filter(s=>!s.employee_id&&!nvt(s)&&(!s.planned_start||!s.planned_end));
+  if(!candidates.length){notice('Geen open shiften zonder volledige uren gevonden.');return}
+  const timeline=readDraaiboekTimes(runRow(event).schedule_text,event);
+  const proposals=[];const skipped=[];
+  // Eerst alle operationele functies voorstellen. Dagco wordt daarna bepaald op basis
+  // van de vroegste keuken-, zaal- of zaalverantwoordelijke shift.
+  const working=allShifts.filter(s=>!nvt(s));
+  const planned=new Map();
+  for(const s of working){
+   const p=proposeRoleHours(s,timeline);
+   if(p)planned.set(s.id,p);
+  }
+  const firstEmployeeStart=working.filter(s=>isOperationalShift(s)).map(s=>{
+   if(s.planned_start)return eventRelativeMinutes(s.planned_start,event.event_date);
+   return planned.get(s.id)?.start;
+  }).filter(Number.isFinite).reduce((a,b)=>Math.min(a,b),Infinity);
+  for(const s of candidates){
+   const p=planned.get(s.id)||proposeRoleHours(s,timeline,firstEmployeeStart);
+   if(!p){skipped.push(s.job_title||'Onbekende functie');continue}
+   // Bij een gedeeltelijk ingevulde shift garanderen dat de bestaande tijden
+   // niet overschreven worden en dat voorgestelde begin/einde logisch blijven.
+   const start=s.planned_start?eventRelativeMinutes(s.planned_start,event.event_date):p.start;
+   const end=s.planned_end?eventRelativeMinutes(s.planned_end,event.event_date):p.end;
+   if(!Number.isFinite(start)||!Number.isFinite(end)||end<=start){skipped.push(s.job_title||'Onbekende functie');continue}
+   proposals.push({shift:s,start:p.start,end:p.end});
+  }
+  if(!proposals.length){notice('Geen shifturen voorgesteld. Controleer of receptie, einde dessert en eventueel LNS/einde feest duidelijk in het draaiboek staan. Niet-gekende functies krijgen geen automatische uren.',true);return}
+  const skipText=skipped.length?'\nNiet ingevuld wegens ontbrekende tijden of onbekende functie: '+skipped.join(', ')+'.':'';
+  if(!confirm('Voor '+proposals.length+' open shift(s) functiegebonden uren invullen volgens het draaiboek? Bestaande uren blijven behouden.'+skipText+'\nControleer de voorstellen vóór je de open shiften deelt.'))return;
+  busy=true;let changed=0;
+  try{
+   for(const p of proposals){
+    const patch={};
+    if(!p.shift.planned_start)patch.planned_start=minuteToShiftTs(event.event_date,p.start);
+    if(!p.shift.planned_end)patch.planned_end=minuteToShiftTs(event.event_date,p.end);
+    const {error}=await client.from('mh_shifts').update(patch).eq('id',p.shift.id);
+    if(error)throw error;
+    changed++;
+   }
+   await reload();notice('Voor '+changed+' open shiften zijn functiegebonden uren voorgesteld.'+(skipped.length?' '+skipped.length+' shift(s) overgeslagen.':'')+' Controleer ze voor publicatie.');
+  }catch(err){notice('Niet alle shifturen konden worden ingevuld ('+changed+'/'+proposals.length+'): '+err.message,true);await reload().catch(()=>{})}finally{busy=false}
+  return;
+ }
  if(finish){if(busy)return;const event=events.find(x=>x.id===finish.dataset.finish);if(!event)return;const done=isDone(event);const text=done?'Event opnieuw actief maken?':`Event als afgewerkt markeren? De shiften, werkelijke uren en omzet blijven bewaard. ${eventShifts(event.id).some(x=>x.employee_id&&!x.actual_end)?'Opgelet: bij minstens één shift ontbreken nog werkelijke einduren.':''}`;if(!confirm(text))return;busy=true;try{const{error}=await client.from('mh_events').update({status:done?'gepland':'afgewerkt'}).eq('id',event.id);if(error)throw error;notice(done?'Event heropend.':'Event afgewerkt en verborgen uit de actieve planning.');await reload();}catch(err){notice('Status niet aangepast: '+err.message,true)}finally{busy=false}return}
  const del=e.target.closest('[data-delete]'),plus=e.target.closest('[data-add]'),def=e.target.closest('[data-default]');if(del){if(!confirm('Deze shift definitief verwijderen uit Supabase?'))return;if(busy)return;busy=true;try{const {error}=await client.from('mh_shifts').delete().eq('id',del.dataset.delete);if(error)throw error;await reload()}catch(err){notice('Wissen mislukt: '+err.message,true)}finally{busy=false}}else if(plus){let root=plus.closest('.controls');await add(plus.dataset.add,root.querySelector('.department').value,root.querySelector('.job').value)}else if(def){let id=def.dataset.default,existing=shifts.filter(s=>s.event_id===id);for(const [dept,roles] of Object.entries(defaultRoles)){const counts={};for(const role of roles){counts[role]=(counts[role]||0)+1;const n=existing.filter(s=>department(s)===dept&&s.job_title.toLowerCase().trim()===role.toLowerCase()).length;if(counts[role]>n){await add(id,dept,role);existing=shifts.filter(s=>s.event_id===id)}}}}});
+function publicKeyAllowed(k){
+ if(!k||k.startsWith('sb_secret_'))return false;
+ if(k.startsWith('sb_publishable_'))return true;
+ try{const v=JSON.parse(atob(k.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));return v.role==='anon'}catch(_){return false}
+}
+$('shareOpen').onclick=async()=>{
+ if(!publicKeyAllowed(key)){notice('Geen veilige publieke Supabase-sleutel beschikbaar. Gebruik uitsluitend de publishable/anon key, nooit een service_role of secret key.',true);return}
+ const u=new URL('open-shiften.html',location.href);
+ u.hash=new URLSearchParams({url:project,key}).toString();
+ try{await navigator.clipboard.writeText(u.href);notice('Vaste link gekopieerd. Plak en pin deze in WhatsApp. Iedereen met de link kan de open uren zien.')}
+ catch(_){window.prompt('Kopieer deze vaste link:',u.href)}
+};
 $('waToggle').onclick=()=>{const panel=$('waPanel');panel.hidden=!panel.hidden;if(!panel.hidden){refreshWaMonths();$('waText').value=makeWhatsappMessage();$('waInfo').textContent='Je kunt de tekst aanpassen voor je kopieert.';panel.scrollIntoView({behavior:'smooth',block:'start'})}};
 $('waGenerate').onclick=()=>{$('waText').value=makeWhatsappMessage();$('waInfo').textContent='Bericht bijgewerkt.'};
 $('waCopy').onclick=async()=>{const t=$('waText');if(!t.value.trim())return;try{await navigator.clipboard.writeText(t.value);$('waInfo').textContent='Gekopieerd! Plak het bericht in je WhatsApp-groep.'}catch(err){t.focus();t.select();try{document.execCommand('copy');$('waInfo').textContent='Gekopieerd. Plak het in WhatsApp.'}catch(_){$('waInfo').textContent='Selecteer en kopieer de tekst met Cmd + C.'}}};
