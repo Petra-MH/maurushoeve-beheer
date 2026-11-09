@@ -21,8 +21,8 @@
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 const $=id=>document.getElementById(id);let client=null;let recovering=false;let recoveringLink=location.hash.includes('type=recovery')||location.search.includes('type=recovery');
-const modules=['Kalender','Personeelsplanning','Weekoverzichten','Feesten & projecten','Kijkdagfiches','Voorbereidingsfiches','Afwerkingsfiches','Medewerkersbeheer','Facturen & kosten','Financiële resultaten'];
-$('modules').innerHTML=modules.map(x=>{const dest=({'Kalender':'kalender.html','Medewerkersbeheer':'medewerkers.html','Personeelsplanning':'planning.html','Feesten & projecten':'importeren.html','Weekoverzichten':'weekoverzicht.html','Kijkdagfiches':'kijkdagen.html','Voorbereidingsfiches':'voorbereiding.html','Afwerkingsfiches':'afwerking.html','Financiële resultaten':'financien.html','Weekoverzichten':'weekoverzicht.html','Kijkdagfiches':'kijkdagen.html','Voorbereidingsfiches':'voorbereiding.html'})[x];return dest?`<a class="tile" href="${dest}" style="display:block;text-decoration:none;color:inherit"><h3>${x}</h3><span class="tag">Openen</span></a>`:`<div class="tile"><h3>${x}</h3><span class="tag">Binnenkort</span></div>`}).join('');
+const modules=['Personeelsplanning','Weekoverzichten','Feesten & projecten','Kijkdagfiches','Voorbereidingsfiches','Afwerkingsfiches','Medewerkersbeheer','Facturen & kosten','Financiële resultaten','Gegevens bijwerken'];
+$('modules').innerHTML=modules.map(x=>{const dest=({'Medewerkersbeheer':'medewerkers.html','Personeelsplanning':'planning.html','Feesten & projecten':'importeren.html','Weekoverzichten':'weekoverzicht.html','Kijkdagfiches':'kijkdagen.html','Voorbereidingsfiches':'voorbereiding.html','Afwerkingsfiches':'afwerking.html','Financiële resultaten':'financien.html','Gegevens bijwerken':'gegevens-bijwerken.html','Weekoverzichten':'weekoverzicht.html','Kijkdagfiches':'kijkdagen.html','Voorbereidingsfiches':'voorbereiding.html'})[x];return dest?`<a class="tile" href="${dest}" style="display:block;text-decoration:none;color:inherit"><h3>${x}</h3><span class="tag">Openen</span></a>`:`<div class="tile"><h3>${x}</h3><span class="tag">Binnenkort</span></div>`}).join('');
 function show(...names){['config','auth','recovery','dashboard'].forEach(n=>$(n).classList.toggle('hidden',!names.includes(n)))}
 function status(msg,type=''){const el=$('status');el.textContent=msg;el.className='notice '+type;el.classList.remove('hidden')}
 function clearStatus(){$('status').classList.add('hidden')}
@@ -53,6 +53,9 @@ const part=k=>dayParts.find(x=>x.type===k).value;
 const currentYear=Number(part('year')),today=`${part('year')}-${part('month')}-${part('day')}`;
 const firstYear=Math.max(2026,currentYear-1);
 const years=[firstYear,firstYear+1,firstYear+2];
+const exclusionRead=await client.from('mh_project_import_exclusions').select('teamleader_projectnr');
+if(exclusionRead.error)throw exclusionRead.error;
+const excludedNumbers=new Set((exclusionRead.data||[]).map(x=>String(x.teamleader_projectnr||'').trim().replace(/^0+(?=\d)/,'')));
 const yearCounts=await Promise.all(years.map(async year=>{
  const q=client.from('mh_event_catalog').select('project_number,event_date,project_status').gte('event_date',`${year}-01-01`).lt('event_date',`${year+1}-01-01`);
  let records=[];
@@ -61,7 +64,7 @@ const yearCounts=await Promise.all(years.map(async year=>{
    if(error)throw error;
    records.push(...(data||[]));if(!data||data.length<800)break;
  }
- const valid=records.filter(e=>!/annul|cancel/i.test(String(e.project_status||'')));
+ const valid=records.filter(e=>!/annul|cancel/i.test(String(e.project_status||'')) && !excludedNumbers.has(String(e.project_number||'').trim().replace(/^0+(?=\d)/,'')));
  return {year,total:valid.length,upcoming:valid.filter(e=>e.event_date>=today).length};
 }));
 $('eventYearCounts').innerHTML=yearCounts.map(x=>`<span>${x.year}: <b>${x.year===currentYear?`${x.upcoming} (${x.total})`:x.total}</b></span>`).join('');
