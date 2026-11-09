@@ -60,6 +60,7 @@
 .fin-pair .est-amount{color:#877f7c;font-weight:500}
 @media print{.estimated-rate,.estimate-note{display:none!important}}
 
+[hidden]{display:none!important}
 /* V14: algemene eventgegevens los van het chronologische tijdschema */
 .event-edit-section{margin:13px 0 16px;padding:13px;border:1px solid #e6dedb;border-radius:7px;background:#fff}
 .event-edit-section h3{margin:0;color:var(--aub);font-size:14px}
@@ -72,37 +73,13 @@
 .event-edit-section .run-help{margin:9px 0 0}
 @media(max-width:760px){.event-edit-section .paired-option{flex-direction:column;align-items:stretch}.event-edit-section .paired-option select{width:100%}}
 
-/* WhatsApp-weekendbericht per medewerker (alleen scherm) */
-.wa-personal-row{display:flex;flex-wrap:wrap;align-items:end;gap:10px;margin:12px 0}
-.wa-personal-row label{display:flex;flex-direction:column;gap:5px;align-items:stretch;font-weight:650;font-size:12px;color:var(--wine)}
-.wa-personal-row input,.wa-personal-row select{min-width:170px;max-width:100%;padding:8px 10px;background:white}
-.wa-personal-row .wa-small-note{font-size:12px;color:#756d6a;align-self:center}
-#personalWaPanel .wa-personal-status{font-size:12px;margin:7px 0;color:#776c6b}
-#personalWaPanel textarea{min-height:175px}
-.wa-personal-list{display:grid;gap:12px;margin-top:15px}
-.wa-message-card{border:1px solid #e4d9d8;border-radius:10px;background:#fff;padding:16px}
-.wa-message-card.sent{background:#f6f7f4;border-color:#d5dfd1}
-.wa-message-head{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}
-.wa-message-head strong{font-size:15px;color:var(--wine)}
-.wa-message-card textarea{display:block;min-height:112px;width:100%;font:inherit;line-height:1.55}
-.wa-message-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:9px}
-.wa-message-actions label{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:650;cursor:pointer}
-.wa-message-actions input[type=checkbox]{width:17px;height:17px;accent-color:#401216}
-.wa-message-state{color:#776c6b;font-size:12px}
-@media print{#personalWaPanel{display:none!important}}
+.staff-entry{border-top:1px solid var(--line);padding:13px 0}.staff-entry-header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between}.staff-controls{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.staff-controls label{display:flex;align-items:center;gap:5px}.staff-entry textarea{min-height:100px;margin:8px 0}.staff-phone{width:180px;max-width:100%}.staff-warning{color:#9e4011;font-weight:700}.staff-entry button{margin:3px 7px 3px 0}.staff-detail{font-size:11px;color:#756d6a}.staff-entry.skip{opacity:.75}
 </style><style id="pageRule"></style></head><body>
 <header><div><strong>MAURUSHOEVE</strong><small>PERSONEELSPLANNING · ONLINE</small></div><div class="toplink"><a href="index.html">← Dashboard</a><span id="who"></span><button class="secondary" id="logout">Afmelden</button></div></header>
-<main><div id="msg" class="notice">Verbinding met Supabase wordt gecontroleerd…</div><div id="app" hidden><div class="toolbar"><label>Maand <select id="month"></select></label><button id="toggle" class="secondary">Shiftoverzicht</button><button id="print">Afdrukken / PDF</button><button id="refresh" class="secondary">Vernieuwen</button><button id="personalWaToggle" class="secondary digital-only">WhatsApp · geplande medewerkers</button><button id="waToggle" class="secondary digital-only">WhatsApp · open shiften</button><button id="shareOpen" class="secondary digital-only" title="Vaste, alleen-lezen link voor de WhatsApp-groep">Kopieer link open shiften</button><label class="archive-filter digital-only"><input type="checkbox" id="showDone"> Ook afgewerkte events tonen</label><span id="saveInfo" class="saving"></span></div><section id="waPanel" class="wa-panel digital-only" hidden><h3>WhatsApp-bericht voor open shiften</h3><p>Alleen toekomstige, niet-afgewerkte events en open shiften met een begin- én einduur worden meegenomen. Bewerk de tekst gerust voor je ze kopieert.</p><div class="wa-toolbar"><label>Vanaf <select id="waStart"></select></label><label>Maanden <select id="waMonths"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option><option value="6">6</option><option value="12">12</option></select></label><button id="waGenerate" class="secondary">Bericht opstellen</button></div><textarea id="waText" aria-label="WhatsApp-bericht bewerken" spellcheck="true"></textarea><div class="wa-footer"><button id="waCopy">Kopieer bericht</button><span id="waInfo" class="muted"></span></div></section><section id="personalWaPanel" class="wa-panel digital-only" hidden>
-<h3>WhatsApp · weekendplanning per medewerker</h3>
-<p>Maak op maandag een persoonlijk bericht voor iedere medewerker die vrijdag, zaterdag of zondag ingepland staat. Controleer en wijzig de tekst voor je die naar WhatsApp kopieert. Er worden geen berichten automatisch verstuurd.</p>
-<div class="wa-personal-row"><label>Weekend vanaf vrijdag<input id="personalWeekend" type="date" aria-label="Vrijdag van het weekend"></label><button id="personalGenerate" class="secondary" type="button">Berichten vernieuwen</button></div>
-<div id="personalWaSummary" class="wa-personal-status" aria-live="polite"></div>
-<div id="personalWaList" class="wa-personal-list"></div>
-<p class="wa-personal-status">De berichten worden niet automatisch verzonden. Klik op ‘Verstuurd’ zodra je het WhatsApp-bericht effectief hebt verstuurd.</p>
-</section><div id="content"></div></div></main>
+<main><div id="msg" class="notice">Verbinding met Supabase wordt gecontroleerd…</div><div id="app" hidden><div class="toolbar"><label>Maand <select id="month"></select></label><button id="toggle" class="secondary">Shiftoverzicht</button><label id="openOnlyWrap" class="archive-filter digital-only" hidden><input type="checkbox" id="openOnly"> Alleen open shiften</label><button id="print">Afdrukken / PDF</button><button id="refresh" class="secondary">Vernieuwen</button><button id="staffWaToggle" class="secondary digital-only">WhatsApp · medewerkers</button><button id="waToggle" class="secondary digital-only">WhatsApp · open shiften</button><button id="shareOpen" class="secondary digital-only" title="Vaste, alleen-lezen link voor de WhatsApp-groep">Kopieer link open shiften</button><label class="archive-filter digital-only"><input type="checkbox" id="showDone"> Ook afgewerkte events tonen</label><span id="saveInfo" class="saving"></span></div><section id="waPanel" class="wa-panel digital-only" hidden><h3>WhatsApp-bericht voor open shiften</h3><p>Alleen toekomstige, niet-afgewerkte events en open shiften met een begin- én einduur worden meegenomen. Bewerk de tekst gerust voor je ze kopieert.</p><div class="wa-toolbar"><label>Vanaf <select id="waStart"></select></label><label>Maanden <select id="waMonths"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option><option value="6">6</option><option value="12">12</option></select></label><button id="waGenerate" class="secondary">Bericht opstellen</button></div><textarea id="waText" aria-label="WhatsApp-bericht bewerken" spellcheck="true"></textarea><div class="wa-footer"><button id="waCopy">Kopieer bericht</button><span id="waInfo" class="muted"></span></div></section><section id="staffWaPanel" class="wa-panel digital-only" hidden><h3>WhatsApp · weekplanning medewerkers</h3><p>Een persoonlijk bericht per medewerker, voor alle events van maandag tot zondag. Een klik opent WhatsApp; versturen gebeurt pas als jij dat daar bevestigt.</p><div class="wa-toolbar"><button class="secondary" id="staffPrev">← Vorige week</button><label>Week van <input type="date" id="staffWeek"></label><button class="secondary" id="staffNext">Volgende week →</button><button id="staffReload" class="secondary">Vernieuwen</button><span id="staffSummary" class="muted"></span></div><div id="staffWaInfo" class="muted"></div><div id="staffWaRows"></div></section><div id="content"></div></div></main>
 <script type="module">
 import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-const $=id=>document.getElementById(id), project=localStorage.getItem('mh_project_url'),key=localStorage.getItem('mh_publishable_key');let client,events=[],employees=[],shifts=[],eventExtras=new Map(),runSheets=new Map(),catalog=[],invoices=[],invoiceAssignments=[],financeByEvent=new Map(),mode='planning',busy=false;
+const $=id=>document.getElementById(id), project=localStorage.getItem('mh_project_url'),key=localStorage.getItem('mh_publishable_key');let client,events=[],employees=[],shifts=[],eventExtras=new Map(),runSheets=new Map(),catalog=[],invoices=[],invoiceAssignments=[],financeByEvent=new Map(),mode='planning',busy=false,staffContacts=new Map(),staffStatuses=new Map(),staffDbReady=false;
 const order=['Keuken','Zaal','Verantwoordelijke','Overige'];
 const defaultRoles={
  'Keuken':['Kok','Handjes keuken','Handjes keuken','Afwas'],
@@ -511,9 +488,9 @@ function scheduleEditor(e){
 }
 
 function eventShifts(eventId){return shifts.filter(s=>s.event_id===eventId).sort(shiftSort)}
-function render(){const evs=events.filter(e=>e.event_date.startsWith($('month').value)&&($('showDone').checked||!isDone(e))).sort((a,b)=>a.event_date.localeCompare(b.event_date));$('content').className=mode==='overview'?'overview-print':'';$('toggle').textContent=mode==='overview'?'Maandplanning':'Shiftoverzicht';$('pageRule').textContent=`@media print{@page{size:A4 ${mode==='overview'?'portrait':'landscape'};margin:7mm}}`;
+function render(){const evs=events.filter(e=>e.event_date.startsWith($('month').value)&&($('showDone').checked||!isDone(e))).sort((a,b)=>a.event_date.localeCompare(b.event_date));$('content').className=mode==='overview'?'overview-print':'';$('toggle').textContent=mode==='overview'?'Maandplanning':'Shiftoverzicht';$('openOnlyWrap').hidden=mode!=='overview';$('pageRule').textContent=`@media print{@page{size:A4 ${mode==='overview'?'portrait':'landscape'};margin:7mm}}`;
 if(!evs.length){$('content').innerHTML='<div class="empty">Geen feesten in deze maand.</div>';return}
-if(mode==='overview'){let rows='';for(const e of evs){rows+=`<tr class="sep"><td colspan="11">${safe(nlDate(e.event_date))} · ${safe(eventLabel(e))} · ${safe(e.event_code||'')}</td></tr>`;rows+=eventShifts(e.id).map(s=>row(s,e,true)).join('')};$('content').innerHTML=`<h2 class="print-title">Shiftoverzicht · ${safe($('month').selectedOptions[0]?.text)}</h2><div class="full"><table><thead><tr>${['Datum','Feest','Afdeling','Taak','Medewerker','Start','Einde','Via','All-in kost/u','Contract','Actie'].map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;return}
+if(mode==='overview'){let rows='';const onlyOpen=$('openOnly').checked;let count=0;for(const e of evs){const visible=eventShifts(e.id).filter(s=>!onlyOpen||(!s.employee_id&&!nvt(s)));if(!visible.length)continue;count+=visible.length;rows+=`<tr class="sep"><td colspan="11">${safe(nlDate(e.event_date))} · ${safe(eventLabel(e))} · ${safe(e.event_code||'')}</td></tr>`;rows+=visible.map(s=>row(s,e,true)).join('')};if(!count){$('content').innerHTML='<div class="empty">Geen open shiften in deze maand.</div>';return}$('content').innerHTML=`<h2 class="print-title">${onlyOpen?'Open shiften':'Shiftoverzicht'} · ${safe($('month').selectedOptions[0]?.text)}</h2><div class="full"><table><thead><tr>${['Datum','Feest','Afdeling','Taak','Medewerker','Start','Einde','Via','All-in kost/u','Contract','Actie'].map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;return}
 $('content').innerHTML=evs.map(e=>{let ss=eventShifts(e.id);let last='',rows='';for(const s of ss){if(department(s)!==last){last=department(s);rows+=`<tr class="dept"><td colspan="17">${safe(last)}</td></tr>`}rows+=row(s,e)}let extra=eventExtras.get(String(e.id))||{};let info=[['Concept',e.concept||extra.concept],['Gasten',extra.guests||e.guest_count_note],['Eventco',extra.weddingplanner],['Type feest',extra.event_type||e.event_type],['Extra gasten',e.extra_guest_note],['Ceremonie',e.ceremony_note],['LNS',e.late_snack_note],['Timing',(e.start_time||'').slice(0,5)+' – '+(e.end_time||'').slice(0,5)]];return `<section class="event"><div class="event-head"><span>${safe(eventLabel(e))}</span><span>${safe(nlDate(e.event_date))} · ${safe(e.event_code||'')} ${isDone(e)?'· AFGEWERKT':''}</span></div><div class="event-top-tools digital-only"><button class="secondary archive-button" data-finish="${e.id}">${isDone(e)?'Heropenen':'Markeer als afgewerkt'}</button></div> <details class="event-extra digital-only"><summary>Eventgegevens en timing invullen</summary>${scheduleEditor(e)}<button type="button" data-save-event="${e.id}">Eventgegevens, draaiboek en briefing opslaan</button> <span class="muted">Wordt bewaard in Supabase, los van nieuwe Teamleader-imports.</span></details><div class="info">${info.map(([a,b])=>`<div><b>${a}</b>${safe(b||'—')}</div>`).join('')}</div><div class="full"><table><thead><tr>${['Afdeling','Taak','Medewerker','Start','Einde','Werkelijk start','Werkelijk einde','Pauze (min)','Contract','Gepland (u)','Werkelijk (u)','All-in kost/u','Actie','Werkelijk begin','Werkelijk einde','Pauze','Handtekening'].map((x,i)=>`<th class="${i>=13?'print-only':i>=5&&i<=12?'digital-only':''}">${x}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div><div class="total">${ss.length} shiften</div>
 
  <div class="controls digital-only"><b>Extra shift:</b><select class="department">${order.map(x=>`<option>${x}</option>`).join('')}</select><input class="job" placeholder="Eigen functie (bv. Barista)" style="max-width:190px"><button data-add="${e.id}">+ Shift toevoegen</button><button class="secondary" data-default="${e.id}">Ontbrekende standaardshiften</button><button class="secondary" data-shift-hours="${e.id}" title="Bereken per functie op basis van receptie, dessert, LNS en einde feest. Voor dagco: tot de eerste operationele medewerker.">Functieuren voorstellen voor open shiften</button></div>
@@ -611,114 +588,26 @@ $('shareOpen').onclick=async()=>{
  try{await navigator.clipboard.writeText(u.href);notice('Vaste link gekopieerd. Plak en pin deze in WhatsApp. Iedereen met de link kan de open uren zien.')}
  catch(_){window.prompt('Kopieer deze vaste link:',u.href)}
 };
-// Persoonlijke weekendberichten. Alleen tabel mh_weekend_whatsapp_status wordt bijgewerkt;
-// shifturen en overige gegevens worden nooit gewijzigd vanuit deze functie.
-let personalMessages=new Map(),personalSent=new Set(),personalSavedTexts=new Map();
-function nextWeekendFriday(){
- const [y,m,d]=today.split('-').map(Number);
- const dt=new Date(Date.UTC(y,m-1,d));
- dt.setUTCDate(dt.getUTCDate()+(5-dt.getUTCDay()+7)%7);
- return dt.toISOString().slice(0,10);
-}
-function shiftWeekendDates(friday){
- const dt=new Date(friday+'T12:00:00Z');if(Number.isNaN(dt.getTime())||dt.getUTCDay()!==5)return [];
- return [0,1,2].map(i=>{const x=new Date(dt);x.setUTCDate(x.getUTCDate()+i);return x.toISOString().slice(0,10)});
-}
-function friendlyEventIntro(ev){
- const title=eventLabel(ev).replace(/\s+/g,' ').trim();
- const wedding=/(trouw|huwelijk|bruiloft|wedding)/i.test(title);
- let couple=title.replace(/^(?:trouwfeest|huwelijksfeest|huwelijk|trouw|wedding|bruiloft)\s*(?:van\s+)?/i,'').replace(/^[-–—:]\s*/,'').trim();
- if(wedding&&couple&&couple!==title&&/\s+(?:en|&)\s+/i.test(couple))return `trouwen ${couple}`;
- if(wedding&&couple&&couple!==title)return `is het trouwfeest van ${couple}`;
- return `is er ${title||'een event'}`;
-}
-function makePersonalWeekendText(member,items,variation){
- const first=(member.full_name||'').trim().split(/\s+/)[0];
- const starts=[first?`Hey ${first}! 😊`:'Hey! 😊',first?`Hoi ${first}!`:'Hoi!',first?`Dag ${first}! 😊`:'Dag!'];
- const endings=['Tot dan!','Alvast bedankt en tot dan! 😊','Tot op de werkvloer!','Merci alvast, tot dan!'];
- const ordered=items.slice().sort((a,b)=>a.ev.event_date.localeCompare(b.ev.event_date)||a.start.localeCompare(b.start));
- const lines=[];const seenDay=new Set();
- for(const [idx,item] of ordered.entries()){
-  const date=item.ev.event_date,dow=wd(date),day=dow.charAt(0).toUpperCase()+dow.slice(1);
-  const desc=friendlyEventIntro(item.ev),time=`van ${item.start} tot ${item.end}`;
-  if(!seenDay.has(date)){
-   const dayIntro=idx===0?
-    [`${day} ${desc}. Je staat op de planning ${time}.`,`${day} ${desc}. Voor jou staat er een shift ${time} op de planning.`,`${day} ${desc}. We verwachten je ${time}.`][variation%3]:
-    [`${day} ${desc}. Dan sta je er ${time}.`,`${day} ${desc}. Je shift loopt dan ${time}.`,`${day} ${desc}. Voor die dag staat er ${time} gepland.`][variation%3];
-   lines.push(dayIntro);seenDay.add(date);
-  }else lines.push(`Diezelfde dag heb je nog een shift ${time}${item.sh.job_title?' ('+item.sh.job_title+')':''}.`);
- }
- return starts[variation%starts.length]+'\n\n'+lines.join('\n')+'\n\n'+endings[variation%endings.length];
-}
-function personalCardId(id){return String(id).replace(/[^a-zA-Z0-9_-]/g,'_')}
-async function readPersonalStatuses(friday){
- const {data,error}=await client.from('mh_weekend_whatsapp_status').select('employee_id,sent').eq('weekend_friday',friday);
- if(error)throw error;
- personalSent=new Set((data||[]).filter(x=>x.sent).map(x=>String(x.employee_id)));
-}
-async function generatePersonalWeekend(){
- const friday=$('personalWeekend').value,dates=shiftWeekendDates(friday);
- const root=$('personalWaList');
- root.innerHTML='';personalMessages=new Map();personalSavedTexts=new Map();
- if(dates.length!==3){$('personalWaSummary').textContent='Kies een vrijdag als startdatum.';return}
- let incomplete=0;
- for(const ev of events.filter(e=>dates.includes(e.event_date)&&!isDone(e))){
-  for(const sh of eventShifts(ev.id)){
-   if(!sh.employee_id||nvt(sh))continue;
-   const member=employees.find(x=>String(x.id)===String(sh.employee_id));if(!member)continue;
-   const start=waTime(sh.planned_start),end=waTime(sh.planned_end);
-   if(!start||!end){incomplete++;continue}
-   const id=String(member.id);
-   if(!personalMessages.has(id))personalMessages.set(id,{member,items:[]});
-   personalMessages.get(id).items.push({ev,sh,start,end});
-  }
- }
- const people=[...personalMessages.entries()].sort((a,b)=>(a[1].member.full_name||'').localeCompare(b[1].member.full_name||'','nl-BE'));
- $('personalWaSummary').textContent=`${people.length} medewerker(s) · ${dates[0].slice(8,10)}/${dates[0].slice(5,7)} t.e.m. ${dates[2].slice(8,10)}/${dates[2].slice(5,7)}${incomplete?' · '+incomplete+' shift(s) zonder volledige uren niet opgenomen':''}`;
- try{await readPersonalStatuses(friday)}catch(error){
-  $('personalWaSummary').textContent+=' · Status kon niet worden geladen. Voer eerst het meegeleverde SQL-bestand uit. ('+error.message+')';
-  return;
- }
- for(const [index,[id,item]] of people.entries()){
-  const identifier=personalCardId(id),sent=personalSent.has(id);
-  const card=document.createElement('article');card.className='wa-message-card'+(sent?' sent':'');card.dataset.employee=id;
-  card.innerHTML=`<div class="wa-message-head"><strong>${safe(item.member.full_name||'Medewerker')}</strong><span class="wa-message-state">${sent?'Verstuurd ✓':'Nog niet verstuurd'}</span></div><textarea aria-label="WhatsApp-tekst voor ${safe(item.member.full_name||'medewerker')}" spellcheck="true"></textarea><div class="wa-message-actions"><button type="button" class="secondary" data-copy-personal>Kopieer bericht</button><label><input type="checkbox" data-personal-sent ${sent?'checked':''}> Verstuurd</label><span class="wa-message-state" aria-live="polite"></span></div>`;
-  card.querySelector('textarea').value=makePersonalWeekendText(item.member,item.items,index);
-  root.appendChild(card);
- }
-}
-$('personalWaToggle').onclick=()=>{
- const panel=$('personalWaPanel');panel.hidden=!panel.hidden;
- if(!panel.hidden){$('waPanel').hidden=true;if(!$('personalWeekend').value)$('personalWeekend').value=nextWeekendFriday();generatePersonalWeekend().catch(e=>notice('Weekendberichten niet geladen: '+e.message,true));panel.scrollIntoView({behavior:'smooth',block:'start'})}
-};
-$('personalGenerate').onclick=()=>{
- if($('personalWaList').querySelector('textarea')&&!confirm('De berichten opnieuw opstellen? Handmatige aanpassingen in de tekst verdwijnen.'))return;
- generatePersonalWeekend().catch(e=>notice('Berichten opnieuw opstellen mislukt: '+e.message,true));
-};
-$('personalWeekend').onchange=()=>generatePersonalWeekend().catch(e=>notice('Weekend niet geladen: '+e.message,true));
-$('personalWaList').addEventListener('click',async e=>{
- const btn=e.target.closest('[data-copy-personal]');if(!btn)return;
- const card=btn.closest('.wa-message-card'),t=card.querySelector('textarea'),info=card.querySelector('.wa-message-actions .wa-message-state');
- if(!t.value.trim())return;
- try{await navigator.clipboard.writeText(t.value);info.textContent='Gekopieerd. Plak in WhatsApp.'}
- catch(_){t.focus();t.select();try{document.execCommand('copy');info.textContent='Gekopieerd.'}catch(err){info.textContent='Kopieer met Cmd + C.'}}
-});
-$('personalWaList').addEventListener('change',async e=>{
- const cb=e.target.closest('[data-personal-sent]');if(!cb)return;
- const card=cb.closest('.wa-message-card'),id=card.dataset.employee;
- const state=card.querySelector('.wa-message-head .wa-message-state'),info=card.querySelector('.wa-message-actions .wa-message-state');
- cb.disabled=true;info.textContent='Opslaan…';
- try{
-  const {error}=await client.from('mh_weekend_whatsapp_status').upsert({employee_id:id,weekend_friday:$('personalWeekend').value,sent:cb.checked},{onConflict:'employee_id,weekend_friday'});
-  if(error)throw error;
-  card.classList.toggle('sent',cb.checked);state.textContent=cb.checked?'Verstuurd ✓':'Nog niet verstuurd';info.textContent='Opgeslagen';
- }catch(err){cb.checked=!cb.checked;info.textContent='Niet opgeslagen: '+err.message;notice('WhatsApp-status opslaan mislukt: '+err.message,true)}finally{cb.disabled=false}
-});
-
-$('waToggle').onclick=()=>{const panel=$('waPanel');panel.hidden=!panel.hidden;if(!panel.hidden){$('personalWaPanel').hidden=true;refreshWaMonths();$('waText').value=makeWhatsappMessage();$('waInfo').textContent='Je kunt de tekst aanpassen voor je kopieert.';panel.scrollIntoView({behavior:'smooth',block:'start'})}};
+// Persoonlijke wekelijkse WhatsApp-berichten. Apart van shifts: geen wijzigingen aan de planning.
+function staffMonday(dateStr){const [y,m,d]=dateStr.split('-').map(Number);const dt=new Date(Date.UTC(y,m-1,d));const day=dt.getUTCDay();dt.setUTCDate(dt.getUTCDate()-(day+6)%7);return dt.toISOString().slice(0,10)}
+function staffAddDays(d,n){const dt=new Date(d+'T12:00:00Z');dt.setUTCDate(dt.getUTCDate()+n);return dt.toISOString().slice(0,10)}
+function staffDefaultSkip(emp){return /^(petra|dieter)(\s|$)/i.test((emp.full_name||'').trim())}
+function staffKey(emp,week){return String(emp.id)+'|'+week}
+function staffShifts(week){const end=staffAddDays(week,7),by=new Map();for(const e of events){if(e.event_date<week||e.event_date>=end||isDone(e))continue;for(const s of eventShifts(e.id)){if(!s.employee_id||nvt(s)||!s.planned_start||!s.planned_end)continue;const k=String(s.employee_id);if(!by.has(k))by.set(k,[]);by.get(k).push({event:e,shift:s})}}for(const x of by.values())x.sort((a,b)=>a.event.event_date.localeCompare(b.event.event_date)||String(a.shift.planned_start).localeCompare(String(b.shift.planned_start)));return by}
+function staffFingerprint(rows){return JSON.stringify(rows.map(({event:e,shift:s})=>[e.id,e.event_date,eventLabel(e),s.id,s.planned_start,s.planned_end,s.job_title]))}
+function staffMessage(emp,rows,week){const first=(emp.full_name||'collega').trim().split(/\s+/)[0];const intros=[`Hey ${first}! 😊\n\nHier is je planning voor deze week:`,`Dag ${first}! 👋\n\nDit zijn je shiften voor deze week:`,`Hey ${first}! 😄\n\nEven je werkplanning op een rijtje:`];let hash=[...String(emp.id)+week].reduce((a,c)=>a+c.charCodeAt(0),0);let lines=rows.map(({event:e,shift:s})=>`• ${nlDate(e.event_date)} – ${eventLabel(e)}\n  ${waTime(s.planned_start)||clock(s.planned_start)} tot ${waTime(s.planned_end)||clock(s.planned_end)}`).join('\n\n');return intros[hash%intros.length]+'\n\n'+lines+'\n\nTot dan en alvast merci! 😊'}
+async function staffLoad(){const [c,st]=await Promise.all([client.from('mh_whatsapp_contacts').select('employee_id,phone,exclude_default'),client.from('mh_whatsapp_week_status').select('employee_id,week_start,status,shift_fingerprint')]);if(c.error||st.error){staffDbReady=false;$('staffWaInfo').textContent='De WhatsApp-tabellen zijn nog niet beschikbaar. Voer eerst de bijgevoegde SQL uit in Supabase. '+(c.error||st.error).message;return}staffDbReady=true;staffContacts=new Map((c.data||[]).map(x=>[String(x.employee_id),x]));staffStatuses=new Map((st.data||[]).map(x=>[staffKey(x,x.week_start),x]));$('staffWaInfo').textContent='Statussen worden in Supabase bewaard. Na klikken op WhatsApp moet je het bericht daar zelf versturen en daarna Verstuurd aanvinken.'}
+function staffRender(){const week=staffMonday($('staffWeek').value||today);$('staffWeek').value=week;const pairs=staffShifts(week);let pending=0,sent=0,skipped=0,changed=0;let html='';for(const [id,rows] of [...pairs].sort((a,b)=>(employees.find(e=>String(e.id)===a[0])?.full_name||'').localeCompare(employees.find(e=>String(e.id)===b[0])?.full_name||'','nl'))){const emp=employees.find(e=>String(e.id)===id);if(!emp)continue;const contact=staffContacts.get(id),saved=staffStatuses.get(staffKey(emp,week));const status=saved?.status||(contact?.exclude_default??staffDefaultSkip(emp)?'skip':'pending');const fingerprint=staffFingerprint(rows);const modified=status==='sent'&&saved?.shift_fingerprint!==fingerprint;if(modified)changed++;if(status==='skip')skipped++;else if(status==='sent')sent++;else pending++;const message=staffMessage(emp,rows,week);html+=`<div class="staff-entry ${status==='skip'?'skip':''}" data-staff-id="${safe(id)}"><div class="staff-entry-header"><strong>${safe(emp.full_name)} <small class="muted">(${rows.length} shift${rows.length===1?'':'s'})</small></strong><div class="staff-controls"><label><input type="checkbox" data-staff-status="sent" ${status==='sent'?'checked':''} ${!staffDbReady?'disabled':''}> Verstuurd</label><label><input type="checkbox" data-staff-status="skip" ${status==='skip'?'checked':''} ${!staffDbReady?'disabled':''}> Overslaan</label></div></div>${modified?'<div class="staff-warning">⚠ Planning gewijzigd sinds je dit als verstuurd markeerde. Controleer of een nieuw bericht nodig is.</div>':''}<div class="staff-detail">${rows.map(x=>safe(nlDate(x.event.event_date)+' · '+eventLabel(x.event)+' · '+waTime(x.shift.planned_start)+'–'+waTime(x.shift.planned_end))).join(' | ')}</div><textarea data-staff-message aria-label="WhatsApp voor ${safe(emp.full_name)}">${safe(message)}</textarea><div class="staff-controls"><label>Gsm-nummer <input class="staff-phone" type="tel" data-staff-phone placeholder="bv. 0470 12 34 56" value="${safe(contact?.phone||'')}"></label><button data-staff-open ${status==='skip'?'disabled':''}>Open WhatsApp</button><button class="secondary" data-staff-copy>Kopieer tekst</button><label><input type="checkbox" data-staff-default-skip ${contact?.exclude_default??staffDefaultSkip(emp)?'checked':''} ${!staffDbReady?'disabled':''}> Standaard overslaan</label></div></div>`} $('staffWaRows').innerHTML=html||'<div class="empty">Er zijn geen ingevulde shiften in deze week.</div>';$('staffSummary').textContent=`${pending} te versturen · ${sent} verstuurd · ${skipped} overgeslagen${changed?' · '+changed+' gewijzigd na verzending':''}`}
+async function staffSaveStatus(id,status){if(!staffDbReady)return;const week=staffMonday($('staffWeek').value),pairs=staffShifts(week),fingerprint=staffFingerprint(pairs.get(String(id))||[]);const {error}=await client.from('mh_whatsapp_week_status').upsert({employee_id:String(id),week_start:week,status,shift_fingerprint:status==='sent'?fingerprint:null},{onConflict:'employee_id,week_start'});if(error){notice('WhatsApp-status niet opgeslagen: '+error.message,true);return}staffStatuses.set(id+'|'+week,{employee_id:id,week_start:week,status,shift_fingerprint:status==='sent'?fingerprint:null});staffRender()}
+async function staffSaveContact(id,patch){if(!staffDbReady)return;const old=staffContacts.get(String(id))||{};const emp=employees.find(e=>String(e.id)===String(id));const record={employee_id:String(id),phone:old.phone||null,exclude_default:old.exclude_default??(emp?staffDefaultSkip(emp):false),...patch};const {error}=await client.from('mh_whatsapp_contacts').upsert(record,{onConflict:'employee_id'});if(error){notice('Contact niet opgeslagen: '+error.message,true);return false}staffContacts.set(String(id),record);return true}
+$('staffWaToggle').onclick=async()=>{const panel=$('staffWaPanel');panel.hidden=!panel.hidden;if(!panel.hidden){if(!$('staffWeek').value)$('staffWeek').value=staffMonday(today);await staffLoad();staffRender();panel.scrollIntoView({behavior:'smooth',block:'start'})}};
+$('staffPrev').onclick=()=>{$('staffWeek').value=staffAddDays(staffMonday($('staffWeek').value),-7);staffRender()};$('staffNext').onclick=()=>{$('staffWeek').value=staffAddDays(staffMonday($('staffWeek').value),7);staffRender()};$('staffWeek').onchange=staffRender;$('staffReload').onclick=async()=>{await reload();await staffLoad();staffRender()};
+$('staffWaRows').addEventListener('change',async e=>{const root=e.target.closest('[data-staff-id]');if(!root)return;const id=root.dataset.staffId,t=e.target;if(t.matches('[data-staff-status]'))await staffSaveStatus(id,t.checked?t.dataset.staffStatus:'pending');else if(t.matches('[data-staff-phone]')){if(await staffSaveContact(id,{phone:t.value.trim()||null}))$('staffWaInfo').textContent='Gsm-nummer opgeslagen.'}else if(t.matches('[data-staff-default-skip]')){if(await staffSaveContact(id,{exclude_default:t.checked})){if(!staffStatuses.has(id+'|'+staffMonday($('staffWeek').value)))staffRender();else $('staffWaInfo').textContent='Standaardvoorkeur opgeslagen; bestaande weekstatus blijft behouden.'}}});
+$('staffWaRows').addEventListener('click',async e=>{const b=e.target.closest('[data-staff-open],[data-staff-copy]');if(!b)return;const root=b.closest('[data-staff-id]');const msg=root.querySelector('[data-staff-message]').value;const id=root.dataset.staffId;if(b.hasAttribute('data-staff-copy')){try{await navigator.clipboard.writeText(msg);$('staffWaInfo').textContent='Tekst gekopieerd.'}catch(_){$('staffWaInfo').textContent='Kopiëren niet gelukt. Selecteer de tekst en gebruik Cmd+C.'}return}const input=root.querySelector('[data-staff-phone]');const phone=input.value.replace(/[^0-9]/g,'').replace(/^00/,'').replace(/^0/,'32');if(phone.length<10||phone.length>15){$('staffWaInfo').textContent='Vul eerst een geldig gsm-nummer in, bijvoorbeeld 0470 12 34 56.';input.focus();return}if(!(await staffSaveContact(id,{phone:input.value.trim()})))return;window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank','noopener,noreferrer');$('staffWaInfo').textContent='WhatsApp geopend. Controleer en verstuur het bericht zelf; vink daarna Verstuurd aan.'});
+$('waToggle').onclick=()=>{const panel=$('waPanel');panel.hidden=!panel.hidden;if(!panel.hidden){refreshWaMonths();$('waText').value=makeWhatsappMessage();$('waInfo').textContent='Je kunt de tekst aanpassen voor je kopieert.';panel.scrollIntoView({behavior:'smooth',block:'start'})}};
 $('waGenerate').onclick=()=>{$('waText').value=makeWhatsappMessage();$('waInfo').textContent='Bericht bijgewerkt.'};
 $('waCopy').onclick=async()=>{const t=$('waText');if(!t.value.trim())return;try{await navigator.clipboard.writeText(t.value);$('waInfo').textContent='Gekopieerd! Plak het bericht in je WhatsApp-groep.'}catch(err){t.focus();t.select();try{document.execCommand('copy');$('waInfo').textContent='Gekopieerd. Plak het in WhatsApp.'}catch(_){$('waInfo').textContent='Selecteer en kopieer de tekst met Cmd + C.'}}};
-$('showDone').onchange=render;$('month').onchange=render;$('toggle').onclick=()=>{mode=mode==='planning'?'overview':'planning';render()};$('print').onclick=()=>window.print();$('refresh').onclick=()=>reload().catch(e=>notice(e.message,true));$('logout').onclick=async()=>{await client.auth.signOut();location.href='index.html'};
+$('showDone').onchange=render;$('openOnly').onchange=render;$('month').onchange=render;$('toggle').onclick=()=>{mode=mode==='planning'?'overview':'planning';render()};$('print').onclick=()=>window.print();$('refresh').onclick=()=>reload().catch(e=>notice(e.message,true));$('logout').onclick=async()=>{await client.auth.signOut();location.href='index.html'};
 async function boot(){if(!project||!key){notice('Open eerst Maurushoeve Beheer en stel de verbinding in.',true);return}client=createClient(project,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});const {data:{session},error}=await client.auth.getSession();if(error||!session){notice('Je bent niet aangemeld. Ga terug naar het dashboard om in te loggen.',true);return}$('who').textContent=session.user.email;$('app').hidden=false;await reload()}
 boot().catch(e=>notice('Kon planning niet laden: '+e.message,true));
 </script></body></html>
