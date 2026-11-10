@@ -626,7 +626,7 @@ function publicKeyAllowed(k){
  if(k.startsWith('sb_publishable_'))return true;
  try{const v=JSON.parse(atob(k.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));return v.role==='anon'}catch(_){return false}
 }
-$('portalLink').onclick=async()=>{const u=new URL('flexiportaal.html',location.href);if(!publicKeyAllowed(key)){notice('Gebruik alleen een veilige publishable/anon sleutel.',true);return}u.hash=new URLSearchParams({url:project,key}).toString();try{await navigator.clipboard.writeText(u.href);notice('Link naar het flexiportaal gekopieerd. Deel deze alleen met medewerkers voor wie je een e-mailadres hebt gekoppeld.')}catch(_){window.prompt('Link naar het flexiportaal:',u.href)}};
+$('portalLink').onclick=async()=>{const u=new URL('flexiportaal.html',location.href);if(!publicKeyAllowed(key)){notice('Gebruik alleen een veilige publishable/anon sleutel.',true);return}u.search=new URLSearchParams({portal_url:project,portal_key:key}).toString();try{await navigator.clipboard.writeText(u.href);notice('Link naar het flexiportaal gekopieerd. Deel deze alleen met medewerkers voor wie je een e-mailadres hebt gekoppeld.')}catch(_){window.prompt('Link naar het flexiportaal:',u.href)}};
 $('shareOpen').onclick=async()=>{
  if(!publicKeyAllowed(key)){notice('Geen veilige publieke Supabase-sleutel beschikbaar. Gebruik uitsluitend de publishable/anon key, nooit een service_role of secret key.',true);return}
  const u=new URL('open-shiften.html',location.href);

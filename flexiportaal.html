@@ -7,11 +7,25 @@
 <script type="module">
 import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 const $=id=>document.getElementById(id),safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const shared=new URLSearchParams(location.hash.slice(1));
-const sharedUrl=shared.get('url'),sharedKey=shared.get('key');
-if(sharedUrl&&/^https:\/\/[^\s/]+\.supabase\.co\/?$/.test(sharedUrl)&&sharedKey&&(sharedKey.startsWith('sb_publishable_')||sharedKey.split('.').length===3)){
- localStorage.setItem('mh_project_url',sharedUrl);localStorage.setItem('mh_publishable_key',sharedKey);
- history.replaceState(null,'',location.pathname+location.search);
+// De publieke Supabase-verbinding wordt in de URL-query bewaard, zodat ook een
+// magic link in een andere browser de verbinding kan openen.
+// Alleen de publishable/anon key gebruiken, NOOIT een secret/service_role key.
+const query=new URLSearchParams(location.search);
+const legacy=new URLSearchParams(location.hash.slice(1));
+const sharedUrl=query.get('portal_url')||legacy.get('url');
+const sharedKey=query.get('portal_key')||legacy.get('key');
+function isPublicKey(v){
+ if(!v||v.startsWith('sb_secret_'))return false;
+ if(v.startsWith('sb_publishable_'))return true;
+ try{const payload=JSON.parse(atob(v.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));return payload.role==='anon'}catch(_){return false}
+}
+if(sharedUrl&&/^https:\/\/[^\s/]+\.supabase\.co\/?$/.test(sharedUrl)&&isPublicKey(sharedKey)){
+ localStorage.setItem('mh_project_url',sharedUrl);
+ localStorage.setItem('mh_publishable_key',sharedKey);
+ // Ook oude deel-links met een # omzetten naar een URL die de aanmelding overleeft.
+ query.set('portal_url',sharedUrl);query.set('portal_key',sharedKey);
+ const cleanHash=location.hash.startsWith('#access_token=')||location.hash.startsWith('#error=')?location.hash:'';
+ history.replaceState(null,'',location.pathname+'?'+query.toString()+cleanHash);
 }
 const url=localStorage.getItem('mh_project_url'),key=localStorage.getItem('mh_publishable_key');let client,rows=[],tab='open',busy=false;
 function msg(t,error=false){$('message').className='msg '+(error?'error':'ok');$('message').textContent=t}
@@ -21,8 +35,8 @@ function render(){const filtered=rows.filter(r=>r.shift_kind===tab);$('tabOpen')
 async function load(){const {data,error}=await client.rpc('mh_portal_my_shifts');if(error){msg('Portaal nog niet beschikbaar: '+error.message,true);return}rows=Array.isArray(data)?data:[];render();msg('Je planning is bijgewerkt.')}
 $('shiftList').addEventListener('click',async e=>{const b=e.target.closest('[data-status]');if(!b||busy)return;busy=true;try{const {error}=await client.rpc('mh_portal_set_availability',{p_shift_id:b.dataset.id,p_status:b.dataset.status});if(error)throw error;await load()}catch(err){msg('Kon beschikbaarheid niet opslaan: '+err.message,true)}finally{busy=false}});
 $('tabOpen').onclick=()=>{tab='open';render()};$('tabMine').onclick=()=>{tab='mine';render()};$('reload').onclick=()=>load();
-$('send').onclick=async()=>{const email=$('email').value.trim().toLowerCase();if(!/^\S+@\S+\.\S+$/.test(email)){msg('Vul een geldig e-mailadres in.',true);return}const {error}=await client.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname,shouldCreateUser:true}});msg(error?'Kon de mail niet versturen: '+error.message:'Als dit e-mailadres toegang heeft, ontvang je een inloglink. Controleer ook je spam.',!!error)};
+$('send').onclick=async()=>{const email=$('email').value.trim().toLowerCase();if(!/^\S+@\S+\.\S+$/.test(email)){msg('Vul een geldig e-mailadres in.',true);return}const {error}=await client.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin+location.pathname+location.search,shouldCreateUser:true}});msg(error?'Kon de mail niet versturen: '+error.message:'Als dit e-mailadres toegang heeft, ontvang je een inloglink. Controleer ook je spam.',!!error)};
 $('logout').onclick=async()=>{await client.auth.signOut();$('app').hidden=true;$('login').hidden=false;msg('Je bent afgemeld.')};
-async function boot(){if(!url||!key){msg('De portaalverbinding is nog niet ingericht op dit toestel. Open eerst het hoofddashboard van Maurushoeve op deze website om de projectverbinding te activeren.',true);return}client=createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});const {data:{session}}=await client.auth.getSession();if(!session){$('login').hidden=false;msg('Meld je aan met je geregistreerde e-mailadres.');return}const {data:emp,error}=await client.rpc('mh_portal_my_employee');if(error||!emp){$('login').hidden=false;$('app').hidden=true;msg('Dit e-mailadres heeft nog geen toegang. Vraag aan Petra om het aan je personeelsprofiel te koppelen.',true);return}$('login').hidden=true;$('app').hidden=false;await load()}
+async function boot(){if(!url||!key){msg('De verbinding ontbreekt in deze link. Vraag Petra om de volledige, nieuwe flexiportaallink opnieuw door te sturen.',true);return}client=createClient(url,key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});const {data:{session}}=await client.auth.getSession();if(!session){$('login').hidden=false;msg('Meld je aan met je geregistreerde e-mailadres.');return}const {data:emp,error}=await client.rpc('mh_portal_my_employee');if(error||!emp){$('login').hidden=false;$('app').hidden=true;msg('Dit e-mailadres heeft nog geen toegang. Vraag aan Petra om het aan je personeelsprofiel te koppelen.',true);return}$('login').hidden=true;$('app').hidden=false;await load()}
 boot().catch(err=>msg(err.message,true));
 </script></body></html>
