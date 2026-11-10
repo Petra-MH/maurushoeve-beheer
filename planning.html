@@ -79,7 +79,7 @@
 <main><div id="msg" class="notice">Verbinding met Supabase wordt gecontroleerd…</div><div id="app" hidden><div class="toolbar"><label>Maand <select id="month"></select></label><button id="toggle" class="secondary">Shiftoverzicht</button><label id="openOnlyWrap" class="archive-filter digital-only" hidden><input type="checkbox" id="openOnly"> Alleen open shiften</label><button id="print">Afdrukken / PDF</button><button id="refresh" class="secondary">Vernieuwen</button><button id="staffWaToggle" class="secondary digital-only">WhatsApp · medewerkers</button><button id="waToggle" class="secondary digital-only">WhatsApp · open shiften</button><button id="shareOpen" class="secondary digital-only" title="Vaste, alleen-lezen link voor de WhatsApp-groep">Kopieer link open shiften</button><label class="archive-filter digital-only"><input type="checkbox" id="showDone"> Ook afgewerkte events tonen</label><span id="saveInfo" class="saving"></span></div><section id="waPanel" class="wa-panel digital-only" hidden><h3>WhatsApp-bericht voor open shiften</h3><p>Alleen toekomstige, niet-afgewerkte events en open shiften met een begin- én einduur worden meegenomen. Bewerk de tekst gerust voor je ze kopieert.</p><div class="wa-toolbar"><label>Vanaf <select id="waStart"></select></label><label>Maanden <select id="waMonths"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option><option value="6">6</option><option value="12">12</option></select></label><button id="waGenerate" class="secondary">Bericht opstellen</button></div><textarea id="waText" aria-label="WhatsApp-bericht bewerken" spellcheck="true"></textarea><div class="wa-footer"><button id="waCopy">Kopieer bericht</button><span id="waInfo" class="muted"></span></div></section><section id="staffWaPanel" class="wa-panel digital-only" hidden><h3>WhatsApp · weekplanning medewerkers</h3><p>Een persoonlijk bericht per medewerker, voor alle events van maandag tot zondag. Een klik opent WhatsApp; versturen gebeurt pas als jij dat daar bevestigt.</p><div class="wa-toolbar"><button class="secondary" id="staffPrev">← Vorige week</button><label>Week van <input type="date" id="staffWeek"></label><button class="secondary" id="staffNext">Volgende week →</button><button id="staffReload" class="secondary">Vernieuwen</button><span id="staffSummary" class="muted"></span></div><div id="staffWaInfo" class="muted"></div><div id="staffWaRows"></div></section><div id="content"></div></div></main>
 <script type="module">
 import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-const $=id=>document.getElementById(id), project=localStorage.getItem('mh_project_url'),key=localStorage.getItem('mh_publishable_key');let client,events=[],employees=[],shifts=[],eventExtras=new Map(),runSheets=new Map(),catalog=[],invoices=[],invoiceAssignments=[],financeByEvent=new Map(),mode='planning',busy=false,staffContacts=new Map(),staffStatuses=new Map(),staffDbReady=false;
+const $=id=>document.getElementById(id), project=localStorage.getItem('mh_project_url'),key=localStorage.getItem('mh_publishable_key');let client,events=[],employees=[],shifts=[],eventExtras=new Map(),runSheets=new Map(),catalog=[],projectTitles=new Map(),invoices=[],invoiceAssignments=[],financeByEvent=new Map(),mode='planning',busy=false,staffContacts=new Map(),staffStatuses=new Map(),staffDbReady=false;
 const order=['Keuken','Zaal','Verantwoordelijke','Overige'];
 const defaultRoles={
  'Keuken':['Kok','Handjes keuken','Handjes keuken','Afwas'],
@@ -180,10 +180,18 @@ function eventFinancial(e){
  return{planned,actual,missingRate,missingTimes,open,external,turnover,estimatedOpenAmount,estimatedOpenCount,ratio:turnover?.amount>0?100*actual/turnover.amount:null};
 }
 function normalizeDate(d){return /^\d{4}-\d{2}-\d{2}$/.test(d||'')?d:''}
-async function loadFinancialData(){financeByEvent=new Map();try{const [cr,ir,ar]=await Promise.all([client.from('mh_event_catalog').select('project_number,teamleader_dealnr,budget_ex_vat,project_status'),readAll('mh_sales_invoices','id,invoice_year,invoice_number,teamleader_dealnr,teamleader_projectnr,signed_amount_ex_vat,amount_ex_vat,credited_amount_ex_vat'),readAll('mh_invoice_assignments','invoice_id,assignment_type,teamleader_dealnr')]);for(const q of [cr,ir,ar])if(q.error)throw q.error;catalog=cr.data||[];invoices=ir.data||[];invoiceAssignments=ar.data||[];
+async function loadFinancialData(){financeByEvent=new Map();try{const [cr,ir,ar]=await Promise.all([client.from('mh_event_catalog').select('project_number,teamleader_dealnr,project_title,budget_ex_vat,project_status'),readAll('mh_sales_invoices','id,invoice_year,invoice_number,teamleader_dealnr,teamleader_projectnr,signed_amount_ex_vat,amount_ex_vat,credited_amount_ex_vat'),readAll('mh_invoice_assignments','invoice_id,assignment_type,teamleader_dealnr')]);// Oudere catalogschema's kunnen project_title missen. Behoud dan de financiële gegevens.
+ if(cr.error){const fallback=await client.from('mh_event_catalog').select('project_number,teamleader_dealnr,budget_ex_vat,project_status');if(fallback.error)throw fallback.error;cr.data=fallback.data;cr.error=null;}
+ for(const q of [cr,ir,ar])if(q.error)throw q.error;catalog=cr.data||[];invoices=ir.data||[];invoiceAssignments=ar.data||[];
+ // Koppel op projectnummer; via dealnummer uitsluitend als exact één catalogproject bestaat.
+ projectTitles=new Map();
+ const byNr=new Map(catalog.filter(p=>p.project_number).map(p=>[keynr(p.project_number),p]));
+ const byDealTitle=new Map();for(const p of catalog){const k=keynr(p.teamleader_dealnr);if(!k)continue;if(!byDealTitle.has(k))byDealTitle.set(k,[]);byDealTitle.get(k).push(p)}
+ for(const e of events){const pn=keynr(e.teamleader_projectnr);let p=pn?byNr.get(pn):null;if(!p&&!pn){const matches=byDealTitle.get(keynr(e.teamleader_dealnr))||[];if(matches.length===1)p=matches[0];}if(p?.project_title)projectTitles.set(String(e.id),p.project_title)}
+ 
  const byProject=new Map(catalog.filter(p=>p.project_number).map(p=>[keynr(p.project_number),p]));const byDeal=new Map();for(const p of catalog){const k=keynr(p.teamleader_dealnr);if(!k)continue;if(!byDeal.has(k))byDeal.set(k,[]);byDeal.get(k).push(p)}const assignments=new Map(invoiceAssignments.map(x=>[String(x.invoice_id),x]));
  const eventByProject=new Map(events.filter(e=>e.teamleader_projectnr).map(e=>[keynr(e.teamleader_projectnr),e]));const sums=new Map();const uncertain=new Map();for(const i of invoices){const a=assignments.get(String(i.id));if(a&&a.assignment_type&&a.assignment_type!=='event')continue;const pnum=keynr(i.teamleader_projectnr);const dnum=keynr(a?.assignment_type==='event'?a.teamleader_dealnr:i.teamleader_dealnr);let event=pnum?eventByProject.get(pnum):null;if(!event&&dnum){const matches=byDeal.get(dnum)||[];if(matches.length===1)event=eventByProject.get(keynr(matches[0].project_number));else if(matches.length>1){for(const e of events.filter(e=>keynr(e.teamleader_dealnr)===dnum))uncertain.set(e.id,'Deal gekoppeld aan meerdere projecten');continue;}else{const candidates=events.filter(e=>keynr(e.teamleader_dealnr)===dnum);if(candidates.length===1)event=candidates[0];}}if(!event)continue;const gross=Number(i.signed_amount_ex_vat??i.amount_ex_vat),credit=n(i.credited_amount_ex_vat);if(!Number.isFinite(gross)){uncertain.set(event.id,'Factuurbedrag ontbreekt');continue}const amount=gross>=0?gross-Math.max(0,credit):gross;sums.set(event.id,(sums.get(event.id)||0)+amount)}
- for(const e of events){const p=byProject.get(keynr(e.teamleader_projectnr));const budget=p?.budget_ex_vat;const flagged=uncertain.get(e.id);financeByEvent.set(e.id,{amount:sums.get(e.id)??null,budget:budget==null?null:Number(budget),warning:flagged||'',source:'Netto verkoopfacturen excl. btw; geen inkomende kosten'});}return '';}catch(err){catalog=[];invoices=[];invoiceAssignments=[];financeByEvent=new Map();return err.message;}}
+ for(const e of events){const p=byProject.get(keynr(e.teamleader_projectnr));const budget=p?.budget_ex_vat;const flagged=uncertain.get(e.id);financeByEvent.set(e.id,{amount:sums.get(e.id)??null,budget:budget==null?null:Number(budget),warning:flagged||'',source:'Netto verkoopfacturen excl. btw; geen inkomende kosten'});}return '';}catch(err){catalog=[];projectTitles=new Map();invoices=[];invoiceAssignments=[];financeByEvent=new Map();return err.message;}}
 async function readAll(table,cols){let list=[];for(let i=0;i<20000;i+=700){const q=await client.from(table).select(cols).range(i,i+699);if(q.error)return q;list.push(...(q.data||[]));if((q.data||[]).length<700)break}return{data:list,error:null}}
 
 function notice(msg,error=false){$('msg').className='notice '+(error?'error':'success');$('msg').textContent=msg}
@@ -239,18 +247,28 @@ function shiftSort(a,b){
 }
 // Gebruik de volledige Teamleader-projecttitel, zonder de datum aan het einde.
 // Geen wijzigingen in Supabase: alleen het zichtbare label in planning en afdruk.
+function cleanEventTitle(value){
+ let title=String(value||'').trim();
+ if(!title)return '';
+ // Alleen een datum op het einde weghalen, nooit een naam of datum middenin.
+ title=title.replace(/\s*(?:[-–—|,]\s*)?(?:(?:maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)\s+)?\d{1,2}[\/.-]\d{1,2}[\/.-]\d{4}\s*$/i,'').trim();
+ return title.replace(/\s*[-–—|,]\s*$/,'').trim();
+}
+function genericEventTitle(value){
+ const t=cleanEventTitle(value).toLocaleLowerCase('nl').replace(/[\s\-_]+/g,' ').trim();
+ return !t || /^(?:babyborrel|verjaardagsfeest|verjaardag|familiefeest|trouwfeest|huwelijksfeest|bedrijfsevent|communie|lentefeest|feest|event|evenement|meeting|seminarie|receptie|doopfeest)$/.test(t);
+}
 function eventLabel(e){
- let title=String(e.project_title||'').trim();
- if(title){
-  // Voorbeelden: "Trouwfeest Selina en David - vrijdag 13/11/2026"
-  // en "Babyborrel - 20-06-2027". Datums midden in een titel blijven staan.
-  title=title.replace(/\s*(?:[-–—|,]\s*)?(?:(?:maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)\s+)?\d{1,2}[\/.-]\d{1,2}[\/.-]\d{4}\s*$/i,'').trim();
-  title=title.replace(/\s*[-–—|,]\s*$/,'').trim();
-  if(title)return title;
- }
+ const original=cleanEventTitle(e.project_title);
+ const fromCatalog=cleanEventTitle(projectTitles.get(String(e.id)));
+ // Een korte soortnaam in mh_events mag de volledige Teamleader-projecttitel
+ // niet verbergen. Een eigen, al volledige titel in mh_events blijft behouden.
+ if(original&&!genericEventTitle(original))return original;
+ if(fromCatalog&&!genericEventTitle(fromCatalog))return fromCatalog;
  const kind=String(e.event_type||'').trim();
  const customer=String(e.customer_name||'').trim();
- return [kind&& !/^(feest|event|evenement)$/i.test(kind)?kind:'Feest',customer].filter(Boolean).join(' – ');
+ if(customer)return [original||kind||'Feest',customer].filter(Boolean).join(' – ');
+ return original||fromCatalog||kind||'Feest';
 }
 
 function runRow(e){return runSheets.get(String(e.id))||{}}
