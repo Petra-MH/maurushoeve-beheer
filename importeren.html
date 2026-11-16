@@ -162,46 +162,92 @@ async function otherAll(table,cols){let result=[];for(let i=0;i<100000;i+=800){c
 function dealPayload(v){const p={teamleader_dealnr:otherText(v.deal)};const entries={title:'title',customer:'customer_name',date:'event_date',type:'event_type',guests:'guests',phase:'phase',department:'department',source:'source',owner:'owner_name',start:'event_start',end:'event_end',location:'location',planner:'weddingplanner',contact:'contact_person_import',contactemail:'contact_email_import',customeremail:'customer_email',mobile:'customer_mobile',notes:'deal_remarks',pipeline:'pipeline',added:'date_added',project:'project_reference',amount:'amount_ex_vat',refusal:'refusal_reason',refusallong:'refusal_details'};
 for(const [from,to] of Object.entries(entries)){if(!$('other_'+from).value)continue;const raw=v[from];if(otherText(raw)==='')continue;if(from==='date'||from==='added'){const d=isoDate(raw);if(d)p[to]=d}else if(from==='amount'){const n=otherNumber(raw);if(n!==null)p[to]=n}else if(from==='start'||from==='end')p[to]=otherTime(raw);else p[to]=otherText(raw)}return p}
 function invoicePayload(v){
- const nr=otherText(v.number),year=Number(otherText(v.year)),amount=otherNumber(v.ex),credited=otherNumber(v.credited),type=otherText(v.type),date=isoDate(v.date);
- const creditByType=/credit|creditnota|creditnote|cn\b/i.test(type)||/^(cn|credit)/i.test(nr);
- // Een totaal gecrediteerd bedrag is GEEN zelfstandig geïmporteerde creditnota.
- // Bewaar bruto en creditering apart; bereken definitieve netto-omzet pas na afstemming.
- const signed=amount===null?null:(creditByType?-Math.abs(amount):amount);
- const flag=x=>otherText(x)===''?null: ['1','true','ja','yes','waar'].includes(otherText(x).toLowerCase());
- return {invoice_year:Number.isInteger(year)&&year>=2000&&year<=2100?year:null,invoice_number:nr,
- invoice_date:date||null,due_date:isoDate(v.due)||null,customer_name:otherText(v.customer)||null,teamleader_dealnr:otherText(v.deal)||null,
- teamleader_projectnr:otherText(v.project)||null,project_title:otherText(v.projecttitle)||null,
- related_deal_title:otherText(v.dealtitle)||null,business_entity:otherText(v.entity)||null,
- advance_invoice:flag(v.advance),credited_amount_ex_vat:credited,document_type:type||null,status:otherText(v.status)||null,
- is_paid:flag(v.paid),payment_date:isoDate(v.paiddate)||null,amount_paid:otherNumber(v.paidamount),amount_outstanding:otherNumber(v.outstanding),
- amount_ex_vat:amount,signed_amount_ex_vat:signed,amount_incl_vat:null,currency:otherText(v.currency)||'EUR',
- source_row:v,updated_at:new Date().toISOString()};
+ const mapped=k=>!!$('other_'+k).value;
+ const nr=otherText(v.number),year=Number(otherText(v.year)),amount=otherNumber(v.ex),type=otherText(v.type);
+ const flag=x=>otherText(x)===''?null:['1','true','ja','yes','waar'].includes(otherText(x).toLowerCase());
+ const p={invoice_year:Number.isInteger(year)&&year>=2000&&year<=2100?year:null,invoice_number:nr};
+ const dates={date:'invoice_date',due:'due_date',paiddate:'payment_date'};
+ const strings={customer:'customer_name',deal:'teamleader_dealnr',project:'teamleader_projectnr',projecttitle:'project_title',dealtitle:'related_deal_title',entity:'business_entity',type:'document_type',status:'status',currency:'currency'};
+ const nums={ex:'amount_ex_vat',credited:'credited_amount_ex_vat',paidamount:'amount_paid',outstanding:'amount_outstanding'};
+ const flags={advance:'advance_invoice',paid:'is_paid'};
+ for(const [from,to] of Object.entries(dates))if(mapped(from))p[to]=isoDate(v[from])||null;
+ for(const [from,to] of Object.entries(strings))if(mapped(from))p[to]=otherText(v[from])||null;
+ for(const [from,to] of Object.entries(nums))if(mapped(from))p[to]=otherNumber(v[from]);
+ for(const [from,to] of Object.entries(flags))if(mapped(from))p[to]=flag(v[from]);
+ if(mapped('ex')){
+  const creditByType=/credit|creditnota|creditnote|cn\b/i.test(type)||/^(cn|credit)/i.test(nr);
+  p.signed_amount_ex_vat=amount===null?null:(creditByType?-Math.abs(amount):amount);
+ }
+ if(!mapped('currency'))delete p.currency; // Een ontbrekende kolom overschrijft nooit de bestaande valuta.
+ return p;
 }
+// Vergelijk uitsluitend de werkelijk geïmporteerde velden. Importmetadata telt niet mee.
+const importNumbers=new Set(['guests','amount_ex_vat','signed_amount_ex_vat','credited_amount_ex_vat','amount_paid','amount_outstanding']);
+const importBooleans=new Set(['advance_invoice','is_paid']);
+const importDates=new Set(['event_date','date_added','invoice_date','due_date','payment_date']);
+function importComparable(key,v){
+ if(v===null||v===undefined||v==='')return null;
+ if(importNumbers.has(key)){const n=otherNumber(v);return n===null?null:Math.round((n+Number.EPSILON)*100)/100}
+ if(importBooleans.has(key))return v===true||v===1||String(v).toLowerCase()==='true'||String(v)==='1';
+ if(importDates.has(key)){const d=isoDate(v);return d||otherText(v)}
+ if(key==='event_start'||key==='event_end')return otherTime(v).slice(0,5);
+ return otherText(v);
+}
+function importChanges(p,old){return Object.keys(p).filter(k=>k!=='source_row'&&k!=='updated_at'&&importComparable(k,p[k])!==importComparable(k,old[k]));}
+function importLabel(k){return ({invoice_date:'Factuurdatum',due_date:'Vervaldatum',payment_date:'Betaaldatum',amount_ex_vat:'Totaal excl. btw',amount_paid:'Totaal betaald',amount_outstanding:'Openstaand',credited_amount_ex_vat:'Gecrediteerd',is_paid:'Betaald',status:'Status',phase:'Fase',event_date:'Eventdatum',customer_name:'Klant',title:'Titel',guests:'Aantal gasten',event_type:'Type event',signed_amount_ex_vat:'Bedrag met teken'})[k]||k.replaceAll('_',' ')}
+function importShow(v){if(v===null||v===undefined||v==='')return '—';return String(v)}
 $('otherPreview').onclick=async()=>{if(otherBusy)return;otherBusy=true;$('otherPreview').disabled=true;try{
  const required=activeImport==='deals'?['deal']:['year','number','date','ex'];
  if(required.some(k=>!$('other_'+k).value))throw Error('Koppel eerst de verplichte kolommen (*).');
  let data;
- if(activeImport==='deals')data=await otherAll('mh_deals','id,teamleader_dealnr,title,customer_name,event_date,phase');
- else data=await otherAll('mh_sales_invoices','id,invoice_number,invoice_year,amount_ex_vat');
- let existing=new Map(data.map(x=>[activeImport==='deals'?otherText(x.teamleader_dealnr):String(x.invoice_year)+'::'+otherText(x.invoice_number),x]));
+ // Haal ook de te vergelijken velden op, niet uitsluitend de identificatievelden.
+ const dealColumns=['id','teamleader_dealnr','title','customer_name','event_date','event_type','guests','phase','department','source','owner_name','event_start','event_end','location','weddingplanner','contact_person_import','contact_email_import','customer_email','customer_mobile','deal_remarks','pipeline','date_added','project_reference','amount_ex_vat','refusal_reason','refusal_details'];
+ const invoiceColumns=['id','invoice_number','invoice_year','invoice_date','due_date','customer_name','teamleader_dealnr','teamleader_projectnr','project_title','related_deal_title','business_entity','advance_invoice','credited_amount_ex_vat','document_type','status','is_paid','payment_date','amount_paid','amount_outstanding','amount_ex_vat','signed_amount_ex_vat','currency'];
+ data=await otherAll(activeImport==='deals'?'mh_deals':'mh_sales_invoices',(activeImport==='deals'?dealColumns:invoiceColumns).join(','));
+ const existing=new Map(data.map(x=>[activeImport==='deals'?otherText(x.teamleader_dealnr):String(x.invoice_year)+'::'+otherText(x.invoice_number),x]));
  const draft=otherRows.map(r=>{const v=otherValues(r),p=activeImport==='deals'?dealPayload(v):invoicePayload(v),nr=activeImport==='deals'?p.teamleader_dealnr:p.invoice_number;
- const key=activeImport==='deals'?nr:String(p.invoice_year)+'::'+nr;return {nr,key,p,old:existing.get(key)};});
+ const key=activeImport==='deals'?nr:String(p.invoice_year)+'::'+nr;return {nr,key,p,old:existing.get(key),source:v};});
  const freq=new Map();for(const x of draft)freq.set(x.key,(freq.get(x.key)||0)+1);
- otherPlanned=draft.map(x=>{let kind='new',reason='';if(!x.nr){kind='skip';reason='Nummer ontbreekt'}
+ otherPlanned=draft.map(x=>{let kind='new',reason='',changes=[];
+ if(!x.nr){kind='skip';reason='Nummer ontbreekt'}
  else if(activeImport==='invoices'&&(!x.p.invoice_year||!x.p.invoice_date||x.p.amount_ex_vat===null)){kind='skip';reason='Jaar, factuurdatum of bedrag ontbreekt/ongeldig'}
- else if(freq.get(x.key)>1){kind='skip';reason='Dubbel jaar + factuurnummer in export; controleer apart'}
- else if(x.old){kind='update';reason='Bestaand record; exportvelden bijwerken'}
- return {...x,kind,reason}});
- const counts=Object.fromEntries(['new','update','skip'].map(k=>[k,otherPlanned.filter(x=>x.kind===k).length]));
- $('otherCounts').textContent=`${counts.new} nieuw · ${counts.update} bestaande records · ${counts.skip} overgeslagen`;
- $('otherDiff').innerHTML=`<table><thead><tr><th>Actie</th><th>Nummer</th><th>Omschrijving / klant</th><th>Datum / jaar</th><th>Opmerking</th></tr></thead><tbody>${otherPlanned.slice(0,300).map(x=>`<tr><td><span class="tag ${x.kind}">${{new:'Nieuw',update:'Bijwerken',skip:'Overslaan'}[x.kind]}</span></td><td>${safe(activeImport==='invoices'?x.key.replace('::',' / '):x.nr)}</td><td>${safe(x.p.title||x.p.customer_name||'—')}</td><td>${safe(x.p.event_date||x.p.invoice_date||x.p.invoice_year||'—')}</td><td>${safe(x.reason)}</td></tr>`).join('')}</tbody></table>${otherPlanned.length>300?`<p class="hint">De eerste 300 van ${otherPlanned.length} regels zijn getoond; alle geldige regels worden bij bevestiging verwerkt.</p>`:''}`;
+ else if(freq.get(x.key)>1){kind='skip';reason='Dubbel nummer in export; controleer apart'}
+ else if(x.old){changes=importChanges(x.p,x.old);kind=changes.length?'update':'same';reason=changes.length?changes.map(importLabel).join(', '):'Geen wijzigingen'}
+ return {...x,kind,reason,changes};});
+ const counts=Object.fromEntries(['new','update','same','skip'].map(k=>[k,otherPlanned.filter(x=>x.kind===k).length]));
+ $('otherCounts').textContent=`${counts.new} nieuw · ${counts.update} gewijzigd · ${counts.same} ongewijzigd · ${counts.skip} overgeslagen`;
+ $('otherDiff').innerHTML=`<table><thead><tr><th>Actie</th><th>Nummer</th><th>Omschrijving / klant</th><th>Datum / jaar</th><th>Opmerking</th></tr></thead><tbody>${otherPlanned.slice(0,300).map(x=>`<tr><td><span class="tag ${x.kind}">${{new:'Nieuw',update:'Bijwerken',same:'Ongewijzigd',skip:'Overslaan'}[x.kind]}</span></td><td>${safe(activeImport==='invoices'?x.key.replace('::',' / '):x.nr)}</td><td>${safe(x.p.title||x.p.customer_name||'—')}</td><td>${safe(x.p.event_date||x.p.invoice_date||x.p.invoice_year||'—')}</td><td>${safe(x.reason)}${x.kind==='update'?`<details><summary>Bekijk oude en nieuwe waarden</summary>${x.changes.map(k=>`<div class="hint"><b>${safe(importLabel(k))}:</b> ${safe(importShow(x.old[k]))} → ${safe(importShow(x.p[k]))}</div>`).join('')}</details>`:''}</td></tr>`).join('')}</tbody></table>${otherPlanned.length>300?`<p class="hint">De eerste 300 van ${otherPlanned.length} regels zijn getoond; alle geldige nieuwe en gewijzigde regels worden bij bevestiging verwerkt.</p>`:''}`;
  $('otherResults').classList.remove('hidden');$('otherOutcome').textContent='';$('otherCommit').disabled=!(counts.new+counts.update);
  msg(activeImport==='invoices'?`Controle klaar. ${counts.skip} twijfelgevallen worden NIET geïmporteerd. Factuurdatum, vervaldatum en betalingen worden apart opgeslagen. Crediteringen apart; netto-omzet nog niet definitief.`:'Controle klaar. Er is nog niets opgeslagen.');
  }catch(e){msg('Controle mislukt: '+e.message,true)}finally{otherBusy=false;$('otherPreview').disabled=false}};
-$('otherCommit').onclick=async()=>{if(otherBusy)return;const valid=otherPlanned.filter(x=>x.kind!=='skip');if(!confirm(`${valid.length} ${activeImport==='deals'?'deals':'verkoopfacturen'} toevoegen of bijwerken? Er worden geen bestaande gegevens verwijderd.`))return;otherBusy=true;$('otherCommit').disabled=true;let ok=0,errs=[];try{
-const table=activeImport==='deals'?'mh_deals':'mh_sales_invoices';for(let i=0;i<valid.length;i++){const x=valid[i],q=x.old?client.from(table).update(x.p).eq('id',x.old.id):client.from(table).insert(x.p);const {error}=await q;if(error){errs.push(`${x.nr}: ${error.message}`);if(errs.length>=5)break}else ok++;if(i%100===0)$('otherOutcome').textContent=`${ok} van ${valid.length} verwerkt…`}
-$('otherOutcome').textContent=`${ok} van ${valid.length} verwerkt. ${otherPlanned.filter(x=>x.kind==='skip').length} overgeslagen (o.a. dubbele factuurnummers).`+(errs.length?' Fout: '+errs.join('; '):' Klaar.');msg(errs.length?'Import onderbroken. Controleer de fout en probeer opnieuw.':'Import afgerond. Bestaande kijkdagfiches en projectgegevens zijn behouden.',!!errs.length)
-}catch(e){msg(e.message,true)}finally{otherBusy=false}}
+$('otherCommit').onclick=async()=>{if(otherBusy)return;
+ const valid=otherPlanned.filter(x=>x.kind==='new'||x.kind==='update');
+ if(!valid.length)return;
+ const nNew=valid.filter(x=>x.kind==='new').length,nUpdate=valid.length-nNew;
+ if(!confirm(`${nNew} nieuwe en ${nUpdate} gewijzigde ${activeImport==='deals'?'deals':'verkoopfacturen'} opslaan? Ongewijzigde records blijven onaangeroerd.`))return;
+ otherBusy=true;$('otherCommit').disabled=true;let ok=0,errs=[];
+ try{
+  const table=activeImport==='deals'?'mh_deals':'mh_sales_invoices';
+  for(let i=0;i<valid.length;i++){
+   const x=valid[i];let payload;
+   if(x.old){payload=Object.fromEntries(x.changes.map(k=>[k,x.p[k]]));}
+   else payload={...x.p};
+   if(activeImport==='invoices'){
+    // Bronrij en importtijd alleen opslaan bij een echte wijziging of nieuw record.
+    payload.source_row=x.source;
+    payload.updated_at=new Date().toISOString();
+    if(x.kind==='new'&&!Object.hasOwn(payload,'currency'))payload.currency='EUR';
+   }
+   const q=x.old?client.from(table).update(payload).eq('id',x.old.id):client.from(table).insert(payload);
+   const {error}=await q;
+   if(error){errs.push(`${x.nr}: ${error.message}`);if(errs.length>=5)break}else ok++;
+   if(i%100===0)$('otherOutcome').textContent=`${ok} van ${valid.length} opgeslagen…`;
+  }
+  $('otherOutcome').textContent=`${ok} van ${valid.length} nieuwe of gewijzigde records opgeslagen. ${otherPlanned.filter(x=>x.kind==='same').length} ongewijzigd, ${otherPlanned.filter(x=>x.kind==='skip').length} overgeslagen.`+(errs.length?' Fout: '+errs.join('; '):' Klaar.');
+  msg(errs.length?'Import gedeeltelijk gelukt. Controleer de fouten.':'Import afgerond. Ongewijzigde records bleven onaangeroerd.',!!errs.length);
+ }catch(e){msg(e.message,true)}finally{otherBusy=false}
+}
+
 
 
 // Creditnota's worden als eigen documenten opgeslagen. Het gecrediteerde bedrag op de
